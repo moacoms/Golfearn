@@ -1,16 +1,40 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+// 에러 코드를 한글 메시지로 변환
+function getErrorMessage(errorCode: string | null): string | null {
+  if (!errorCode) return null
+
+  const errorMessages: Record<string, string> = {
+    'otp_expired': '인증 링크가 만료되었습니다. 다시 회원가입해주세요.',
+    'access_denied': '접근이 거부되었습니다.',
+    'auth_callback_error': '인증 처리 중 오류가 발생했습니다.',
+    'no_code': '인증 코드가 없습니다.',
+    'invalid_request': '잘못된 요청입니다.',
+  }
+
+  return errorMessages[errorCode] || errorCode
+}
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // URL에서 에러 파라미터 확인
+  useEffect(() => {
+    const urlError = searchParams.get('error')
+    if (urlError) {
+      setError(getErrorMessage(urlError))
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

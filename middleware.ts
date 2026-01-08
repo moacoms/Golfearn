@@ -4,10 +4,11 @@ import { updateSession } from '@/lib/supabase/middleware'
 export async function middleware(request: NextRequest) {
   const { searchParams, pathname } = request.nextUrl
 
-  // 루트에 code 파라미터가 있으면 /auth/callback으로 리다이렉트
-  if (pathname === '/' && searchParams.get('code')) {
+  // 루트에 code 또는 error 파라미터가 있으면 /auth/callback으로 리다이렉트
+  if (pathname === '/' && (searchParams.get('code') || searchParams.get('error'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/callback'
+    // 모든 쿼리 파라미터 유지
     return NextResponse.redirect(url)
   }
 
