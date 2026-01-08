@@ -29,6 +29,7 @@ export async function getProducts(filters?: {
   minPrice?: number
   maxPrice?: number
   location?: string
+  search?: string
 }) {
   const supabase = await createClient()
 
@@ -62,6 +63,11 @@ export async function getProducts(filters?: {
 
   if (filters?.location) {
     query = query.ilike('location', `%${filters.location}%`)
+  }
+
+  // 검색어 필터 (제목 또는 설명에서 검색)
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
   }
 
   const { data, error } = await query

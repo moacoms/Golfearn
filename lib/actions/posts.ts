@@ -21,7 +21,7 @@ export type PostWithAuthor = {
 }
 
 // 게시글 목록 조회
-export async function getPosts(category?: string) {
+export async function getPosts(category?: string, search?: string) {
   const supabase = await createClient()
 
   let query = supabase
@@ -38,6 +38,11 @@ export async function getPosts(category?: string) {
 
   if (category && category !== 'all') {
     query = query.eq('category', category)
+  }
+
+  // 검색어 필터 (제목 또는 내용에서 검색)
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`)
   }
 
   const { data, error } = await query

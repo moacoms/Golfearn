@@ -70,12 +70,13 @@ function ProductCard({ product }: { product: ProductWithSeller }) {
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; status?: string }>
+  searchParams: Promise<{ category?: string; status?: string; search?: string }>
 }) {
   const params = await searchParams
   const products = await getProducts({
     category: params.category,
     status: params.status,
+    search: params.search,
   })
 
   return (

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getPosts } from '@/lib/actions/posts'
 import { formatDate } from '@/lib/utils'
+import CommunitySearch from './CommunitySearch'
 
 const categories = [
   { id: 'all', name: '전체' },
@@ -17,11 +18,11 @@ export const metadata = {
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>
+  searchParams: Promise<{ category?: string; search?: string }>
 }) {
-  const { category } = await searchParams
-  const currentCategory = category || 'all'
-  const posts = await getPosts(currentCategory)
+  const params = await searchParams
+  const currentCategory = params.category || 'all'
+  const posts = await getPosts(currentCategory, params.search)
 
   return (
     <div className="py-12">
@@ -36,6 +37,9 @@ export default async function CommunityPage({
             글쓰기
           </Link>
         </div>
+
+        {/* Search */}
+        <CommunitySearch />
 
         {/* Categories */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -56,8 +60,17 @@ export default async function CommunityPage({
         <div className="card">
           {posts.length === 0 ? (
             <div className="py-12 text-center text-muted">
-              <p className="text-lg mb-2">아직 게시글이 없습니다</p>
-              <p>첫 번째 글을 작성해보세요!</p>
+              {params.search ? (
+                <>
+                  <p className="text-lg mb-2">&quot;{params.search}&quot; 검색 결과가 없습니다</p>
+                  <p>다른 키워드로 검색해보세요</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg mb-2">아직 게시글이 없습니다</p>
+                  <p>첫 번째 글을 작성해보세요!</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -94,7 +107,7 @@ export default async function CommunityPage({
         </div>
 
         {/* Empty State CTA */}
-        {posts.length === 0 && (
+        {posts.length === 0 && !params.search && (
           <div className="mt-8 text-center">
             <Link href="/community/write" className="btn btn-primary">
               첫 글 작성하기
