@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import ProductActions from './ProductActions'
 import ProductImageGallery from './ProductImageGallery'
 import FavoriteButton from './FavoriteButton'
+import ChatButton from './ChatButton'
 
 const categories: { [key: string]: string } = {
   driver: '드라이버',
@@ -136,9 +137,7 @@ export default async function ProductDetailPage({
               ) : (
                 <>
                   <FavoriteButton productId={productId} initialIsFavorite={isFavorite} />
-                  <button className="btn btn-primary flex-1">
-                    채팅하기
-                  </button>
+                  <ChatButton productId={productId} sellerId={product.user_id} />
                 </>
               )}
             </div>
