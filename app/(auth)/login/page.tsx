@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -20,7 +20,7 @@ function getErrorMessage(errorCode: string | null): string | null {
   return errorMessages[errorCode] || errorCode
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -51,6 +51,8 @@ export default function LoginPage() {
       if (error) {
         if (error.message === 'Invalid login credentials') {
           setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+        } else if (error.message === 'Email not confirmed') {
+          setError('이메일 인증이 필요합니다. 받은 메일함을 확인해주세요.')
         } else {
           setError(error.message)
         }
@@ -189,5 +191,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-muted">로딩 중...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

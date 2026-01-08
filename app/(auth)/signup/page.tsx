@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { signUp } from '@/lib/actions/auth'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -38,23 +39,18 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
+      // 서버 액션으로 회원가입 (PKCE 문제 해결)
+      const result = await signUp({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.username,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        username: formData.username,
       })
 
-      if (error) {
-        if (error.message.includes('already registered')) {
+      if (result.error) {
+        if (result.error.includes('already registered')) {
           setError('이미 가입된 이메일입니다.')
         } else {
-          setError(error.message)
+          setError(result.error)
         }
         return
       }

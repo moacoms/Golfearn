@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const statusOptions = [
@@ -10,7 +10,7 @@ const statusOptions = [
   { id: 'sold', name: '판매완료' },
 ]
 
-export default function MarketFilters({
+function MarketFiltersInner({
   categories,
 }: {
   categories: { id: string; name: string }[]
@@ -173,5 +173,17 @@ export default function MarketFilters({
         )}
       </div>
     </div>
+  )
+}
+
+export default function MarketFilters({
+  categories,
+}: {
+  categories: { id: string; name: string }[]
+}) {
+  return (
+    <Suspense fallback={<div className="card mb-8 h-32 animate-pulse bg-gray-100" />}>
+      <MarketFiltersInner categories={categories} />
+    </Suspense>
   )
 }
