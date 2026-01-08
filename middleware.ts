@@ -1,7 +1,16 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  const { searchParams, pathname } = request.nextUrl
+
+  // 루트에 code 파라미터가 있으면 /auth/callback으로 리다이렉트
+  if (pathname === '/' && searchParams.get('code')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
   return await updateSession(request)
 }
 
