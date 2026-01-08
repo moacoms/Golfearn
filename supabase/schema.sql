@@ -319,5 +319,37 @@ create trigger update_products_updated_at
   for each row execute procedure update_updated_at_column();
 
 -- ============================================
+-- 9. Storage 버킷 (이미지 업로드)
+-- ============================================
+-- 참고: Storage 버킷은 SQL로 생성할 수 없습니다.
+-- Supabase Dashboard > Storage에서 수동으로 생성해야 합니다.
+--
+-- 1. Supabase Dashboard에 로그인
+-- 2. Storage 메뉴 클릭
+-- 3. "New bucket" 클릭
+-- 4. Name: "products" 입력
+-- 5. Public bucket 체크
+-- 6. Create 클릭
+--
+-- 또는 아래 명령을 SQL Editor에서 실행 (storage 권한 필요):
+-- insert into storage.buckets (id, name, public) values ('products', 'products', true);
+
+-- Storage 정책 (버킷 생성 후 실행)
+-- 누구나 이미지 조회 가능
+create policy "Public read access for products bucket"
+  on storage.objects for select
+  using (bucket_id = 'products');
+
+-- 로그인한 사용자만 업로드 가능
+create policy "Authenticated users can upload to products bucket"
+  on storage.objects for insert
+  with check (bucket_id = 'products' and auth.role() = 'authenticated');
+
+-- 본인이 업로드한 파일만 삭제 가능
+create policy "Users can delete own files in products bucket"
+  on storage.objects for delete
+  using (bucket_id = 'products' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ============================================
 -- 완료!
 -- ============================================

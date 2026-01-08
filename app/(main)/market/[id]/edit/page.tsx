@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getProduct, updateProduct } from '@/lib/actions/products'
+import ImageUpload from '@/components/ImageUpload'
 
 const categories = [
   { id: 'driver', name: '드라이버' },
@@ -102,17 +103,6 @@ export default function EditProductPage({
     }
   }
 
-  const handleAddImageUrl = () => {
-    const url = prompt('이미지 URL을 입력하세요:')
-    if (url && images.length < 5) {
-      setImages([...images, url])
-    }
-  }
-
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
-
   if (isLoading) {
     return (
       <div className="py-12">
@@ -168,33 +158,12 @@ export default function EditProductPage({
             <label className="block text-sm font-medium mb-2">
               상품 이미지 (최대 5장)
             </label>
-            <div className="flex flex-wrap gap-3">
-              {images.map((image, index) => (
-                <div key={index} className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt={`상품 이미지 ${index + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {images.length < 5 && (
-                <button
-                  type="button"
-                  onClick={handleAddImageUrl}
-                  className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span className="text-xs mt-1">추가</span>
-                </button>
-              )}
-            </div>
+            <ImageUpload
+              images={images}
+              onChange={setImages}
+              maxImages={5}
+              bucket="products"
+            />
           </div>
 
           {/* 카테고리 */}
