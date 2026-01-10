@@ -45,6 +45,14 @@ export interface Database {
           bio: string | null
           created_at: string
           updated_at: string
+          // 위치 기반 필드
+          location_address: string | null
+          location_dong: string | null
+          location_gu: string | null
+          location_city: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_range: number
         }
         Insert: {
           id: string
@@ -58,6 +66,14 @@ export interface Database {
           bio?: string | null
           created_at?: string
           updated_at?: string
+          // 위치 기반 필드
+          location_address?: string | null
+          location_dong?: string | null
+          location_gu?: string | null
+          location_city?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_range?: number
         }
         Update: {
           id?: string
@@ -71,6 +87,14 @@ export interface Database {
           bio?: string | null
           created_at?: string
           updated_at?: string
+          // 위치 기반 필드
+          location_address?: string | null
+          location_dong?: string | null
+          location_gu?: string | null
+          location_city?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_range?: number
         }
       }
       posts: {
@@ -146,6 +170,14 @@ export interface Database {
           view_count: number
           created_at: string
           updated_at: string
+          // 위치 기반 필드
+          location_address: string | null
+          location_dong: string | null
+          location_gu: string | null
+          location_city: string | null
+          location_lat: number | null
+          location_lng: number | null
+          use_seller_location: boolean
         }
         Insert: {
           id?: never
@@ -161,6 +193,14 @@ export interface Database {
           view_count?: number
           created_at?: string
           updated_at?: string
+          // 위치 기반 필드
+          location_address?: string | null
+          location_dong?: string | null
+          location_gu?: string | null
+          location_city?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          use_seller_location?: boolean
         }
         Update: {
           id?: never
@@ -176,6 +216,14 @@ export interface Database {
           view_count?: number
           created_at?: string
           updated_at?: string
+          // 위치 기반 필드
+          location_address?: string | null
+          location_dong?: string | null
+          location_gu?: string | null
+          location_city?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          use_seller_location?: boolean
         }
       }
       favorites: {
@@ -271,3 +319,58 @@ export type PostCategory = 'qna' | 'free' | 'review'
 export type ProductCategory = 'driver' | 'wood' | 'iron' | 'putter' | 'wedge' | 'set' | 'bag' | 'wear' | 'etc'
 export type ProductCondition = 'S' | 'A' | 'B' | 'C'
 export type ProductStatus = 'selling' | 'reserved' | 'sold'
+
+// =============================================
+// 위치 관련 타입
+// =============================================
+
+// 위치 정보
+export type LocationInfo = {
+  address: string | null      // 전체 주소
+  dong: string | null         // 동
+  gu: string | null           // 구
+  city: string | null         // 시/도
+  lat: number | null          // 위도
+  lng: number | null          // 경도
+}
+
+// 검색 범위 (km)
+export type LocationRange = 1 | 3 | 5 | 10 | 20
+
+// 위치가 포함된 상품 (거리 계산 포함)
+export interface ProductWithDistance extends Product {
+  distance?: number           // 사용자로부터의 거리 (km)
+  seller?: Profile           // 판매자 정보
+}
+
+// Google Maps Geocoding API 응답 타입
+export interface GoogleGeocodingResult {
+  formatted_address: string
+  address_components: {
+    long_name: string
+    short_name: string
+    types: string[]
+  }[]
+  geometry: {
+    location: {
+      lat: number
+      lng: number
+    }
+  }
+  place_id: string
+}
+
+export interface GoogleGeocodingResponse {
+  results: GoogleGeocodingResult[]
+  status: string
+}
+
+// 파싱된 한국 주소
+export interface ParsedKoreanAddress {
+  address: string
+  dong: string | null         // 동/읍/면/리
+  gu: string | null           // 구/군/시
+  city: string | null         // 시/도
+  lat: number
+  lng: number
+}

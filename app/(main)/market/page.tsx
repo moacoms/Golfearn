@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { getProducts, ProductWithSeller } from '@/lib/actions/products'
+import { getUserLocation } from '@/lib/actions/location'
 import { formatPrice } from '@/lib/utils'
 import MarketFilters from './MarketFilters'
+import MarketClientWrapper from './MarketClientWrapper'
 
 const categories = [
   { id: 'all', name: '전체' },
@@ -59,7 +61,24 @@ function ProductCard({ product }: { product: ProductWithSeller }) {
                 {product.condition}급
               </span>
             )}
-            {product.location && <span>{product.location}</span>}
+            {/* 위치 및 거리 표시 */}
+            {product.location_dong ? (
+              <span className="flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                {product.location_dong}
+                {product.distance !== undefined && (
+                  <span className="text-primary font-medium">
+                    {product.distance < 1
+                      ? `${Math.round(product.distance * 1000)}m`
+                      : `${product.distance.toFixed(1)}km`}
+                  </span>
+                )}
+              </span>
+            ) : product.location ? (
+              <span>{product.location}</span>
+            ) : null}
           </div>
         </div>
       </article>
@@ -70,13 +89,30 @@ function ProductCard({ product }: { product: ProductWithSeller }) {
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; status?: string; search?: string }>
+  searchParams: Promise<{ category?: string; status?: string; search?: string; range?: string; lat?: string; lng?: string }>
 }) {
   const params = await searchParams
+
+  // 사용자 위치 정보 가져오기
+  const locationResult = await getUserLocation()
+  const userLocation = locationResult.success ? locationResult.location : null
+
+  // 위치 기반 필터링 파라미터
+  const locationFilter = params.range && params.lat && params.lng ? {
+    lat: parseFloat(params.lat),
+    lng: parseFloat(params.lng),
+    range: parseInt(params.range),
+  } : userLocation?.lat && userLocation?.lng && userLocation?.dong ? {
+    lat: userLocation.lat,
+    lng: userLocation.lng,
+    range: userLocation.range,
+  } : undefined
+
   const products = await getProducts({
     category: params.category,
     status: params.status,
     search: params.search,
+    location: locationFilter,
   })
 
   return (
@@ -93,8 +129,8 @@ export default async function MarketPage({
           </Link>
         </div>
 
-        {/* Filters */}
-        <MarketFilters categories={categories} />
+        {/* 위치 미설정시 배너 + 필터 */}
+        <MarketClientWrapper userLocation={userLocation} categories={categories} />
 
         {/* Products Grid */}
         {products.length > 0 ? (

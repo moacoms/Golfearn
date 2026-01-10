@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { LocationFilterChip } from '@/components/location'
 
 const statusOptions = [
   { id: 'all', name: '전체' },
@@ -10,10 +11,23 @@ const statusOptions = [
   { id: 'sold', name: '판매완료' },
 ]
 
+interface UserLocation {
+  dong: string | null
+  gu: string | null
+  city: string | null
+  lat: number | null
+  lng: number | null
+  range: number
+}
+
 function MarketFiltersInner({
   categories,
+  userLocation,
+  onLocationChange,
 }: {
   categories: { id: string; name: string }[]
+  userLocation?: UserLocation | null
+  onLocationChange?: () => void
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -52,6 +66,17 @@ function MarketFiltersInner({
   return (
     <div className="card mb-8">
       <div className="flex flex-col gap-4">
+        {/* 위치 필터 */}
+        <div className="flex items-center gap-3">
+          <LocationFilterChip
+            userLocation={userLocation}
+            onLocationChange={onLocationChange}
+          />
+          <span className="text-sm text-muted">
+            {userLocation?.dong ? `${userLocation.dong} 주변 매물` : '전국 매물'}
+          </span>
+        </div>
+
         {/* 검색 */}
         <form onSubmit={handleSearch} className="relative">
           <input
@@ -178,12 +203,20 @@ function MarketFiltersInner({
 
 export default function MarketFilters({
   categories,
+  userLocation,
+  onLocationChange,
 }: {
   categories: { id: string; name: string }[]
+  userLocation?: UserLocation | null
+  onLocationChange?: () => void
 }) {
   return (
     <Suspense fallback={<div className="card mb-8 h-32 animate-pulse bg-gray-100" />}>
-      <MarketFiltersInner categories={categories} />
+      <MarketFiltersInner
+        categories={categories}
+        userLocation={userLocation}
+        onLocationChange={onLocationChange}
+      />
     </Suspense>
   )
 }

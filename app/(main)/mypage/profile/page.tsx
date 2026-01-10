@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getProfile, updateProfile } from '@/lib/actions/profile'
+import { LocationSettingModal } from '@/components/location'
 
 export default function ProfileEditPage() {
   const router = useRouter()
@@ -11,6 +12,13 @@ export default function ProfileEditPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
+  const [locationInfo, setLocationInfo] = useState<{
+    dong: string | null
+    gu: string | null
+    city: string | null
+    range: number
+  } | null>(null)
   const [formData, setFormData] = useState({
     username: '',
     full_name: '',
@@ -32,6 +40,13 @@ export default function ProfileEditPage() {
           golf_started_at: profile.golf_started_at || '',
           average_score: profile.average_score?.toString() || '',
           location: profile.location || '',
+        })
+        // 위치 정보 설정
+        setLocationInfo({
+          dong: profile.location_dong || null,
+          gu: profile.location_gu || null,
+          city: profile.location_city || null,
+          range: profile.location_range || 3,
         })
       }
       setIsLoading(false)
@@ -196,10 +211,69 @@ export default function ProfileEditPage() {
             />
           </div>
 
-          {/* 지역 */}
+          {/* 동네 설정 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">
+              동네 설정
+            </label>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {locationInfo?.dong || locationInfo?.gu ? (
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {locationInfo.dong || locationInfo.gu}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {locationInfo.city} {locationInfo.gu !== locationInfo.dong && locationInfo.gu}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">위치가 설정되지 않았습니다</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLocationModalOpen(true)}
+                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                >
+                  {locationInfo?.dong ? '변경' : '설정하기'}
+                </button>
+              </div>
+              {locationInfo?.dong && (
+                <p className="mt-2 text-xs text-gray-500">
+                  검색 범위: {locationInfo.range}km 이내
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-muted mt-1">
+              중고거래에서 내 위치 기반으로 가까운 매물을 볼 수 있습니다
+            </p>
+          </div>
+
+          {/* 기존 지역 (텍스트) - 호환성 유지 */}
           <div className="mb-6">
             <label htmlFor="location" className="block text-sm font-medium mb-2">
-              지역
+              지역 (선택)
             </label>
             <input
               id="location"
@@ -207,7 +281,7 @@ export default function ProfileEditPage() {
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="예: 서울 강남"
+              placeholder="예: 서울 강남 (텍스트로 추가 입력)"
               className="input"
               disabled={isSubmitting}
             />
@@ -227,6 +301,30 @@ export default function ProfileEditPage() {
             </button>
           </div>
         </form>
+
+        {/* 위치 설정 모달 */}
+        <LocationSettingModal
+          isOpen={isLocationModalOpen}
+          onClose={() => setIsLocationModalOpen(false)}
+          currentLocation={locationInfo}
+          onSuccess={() => {
+            // 프로필 다시 로드
+            getProfile().then((profile) => {
+              if (profile) {
+                setLocationInfo({
+                  dong: profile.location_dong || null,
+                  gu: profile.location_gu || null,
+                  city: profile.location_city || null,
+                  range: profile.location_range || 3,
+                })
+                setFormData((prev) => ({
+                  ...prev,
+                  location: profile.location || '',
+                }))
+              }
+            })
+          }}
+        />
       </div>
     </div>
   )

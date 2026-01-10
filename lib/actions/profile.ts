@@ -13,6 +13,14 @@ export type Profile = {
   average_score: number | null
   location: string | null
   created_at: string
+  // 위치 기반 필드
+  location_address: string | null
+  location_dong: string | null
+  location_gu: string | null
+  location_city: string | null
+  location_lat: number | null
+  location_lng: number | null
+  location_range: number
 }
 
 // 프로필 조회

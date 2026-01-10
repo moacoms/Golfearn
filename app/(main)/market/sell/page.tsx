@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createProduct } from '@/lib/actions/products'
+import { getUserLocation } from '@/lib/actions/location'
 import ImageUpload from '@/components/ImageUpload'
+import { ProductLocationSelector } from '@/components/location'
 
 const categories = [
   { id: 'driver', name: '드라이버' },
@@ -22,11 +24,48 @@ const conditions = [
   { id: 'C', name: 'C급', description: '사용감 많음' },
 ]
 
+interface LocationData {
+  address: string | null
+  dong: string | null
+  gu: string | null
+  city: string | null
+  lat: number | null
+  lng: number | null
+  useSellerLocation: boolean
+}
+
 export default function SellPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
+  const [sellerLocation, setSellerLocation] = useState<{
+    address: string | null
+    dong: string | null
+    gu: string | null
+    city: string | null
+    lat: number | null
+    lng: number | null
+  } | null>(null)
+  const [productLocation, setProductLocation] = useState<LocationData | null>(null)
+
+  // 사용자 위치 정보 로드
+  useEffect(() => {
+    const loadLocation = async () => {
+      const result = await getUserLocation()
+      if (result.success && result.location) {
+        setSellerLocation({
+          address: result.location.address,
+          dong: result.location.dong,
+          gu: result.location.gu,
+          city: result.location.city,
+          lat: result.location.lat,
+          lng: result.location.lng,
+        })
+      }
+    }
+    loadLocation()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,6 +74,19 @@ export default function SellPage() {
 
     const formData = new FormData(e.currentTarget)
     formData.set('images', JSON.stringify(images))
+
+    // 위치 정보 추가
+    if (productLocation) {
+      formData.set('location_address', productLocation.address || '')
+      formData.set('location_dong', productLocation.dong || '')
+      formData.set('location_gu', productLocation.gu || '')
+      formData.set('location_city', productLocation.city || '')
+      formData.set('location_lat', productLocation.lat?.toString() || '')
+      formData.set('location_lng', productLocation.lng?.toString() || '')
+      formData.set('use_seller_location', productLocation.useSellerLocation ? 'true' : 'false')
+      // 기존 location 필드도 동네 이름으로 설정 (호환성)
+      formData.set('location', productLocation.dong || productLocation.gu || '')
+    }
 
     const result = await createProduct(formData)
 
@@ -165,18 +217,11 @@ export default function SellPage() {
             </div>
           </div>
 
-          {/* 지역 */}
+          {/* 거래 위치 */}
           <div className="mb-6">
-            <label htmlFor="location" className="block text-sm font-medium mb-2">
-              지역
-            </label>
-            <input
-              id="location"
-              name="location"
-              type="text"
-              placeholder="예: 서울 강남"
-              className="input"
-              disabled={isSubmitting}
+            <ProductLocationSelector
+              sellerLocation={sellerLocation}
+              onChange={setProductLocation}
             />
           </div>
 
