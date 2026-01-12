@@ -13,6 +13,8 @@ export type ProductWithSeller = {
   images: string[] | null
   status: string
   location: string | null
+  latitude: number | null
+  longitude: number | null
   created_at: string
   user_id: string
   profiles: {
@@ -20,6 +22,7 @@ export type ProductWithSeller = {
     full_name: string | null
     avatar_url: string | null
   } | null
+  distance_km?: number
 }
 
 // 상품 목록 조회
@@ -121,6 +124,10 @@ export async function createProduct(formData: FormData): Promise<{ error?: strin
   const price = parseInt(formData.get('price') as string)
   const condition = formData.get('condition') as string
   const location = formData.get('location') as string
+  const latitudeStr = formData.get('latitude') as string
+  const longitudeStr = formData.get('longitude') as string
+  const latitude = latitudeStr ? parseFloat(latitudeStr) : null
+  const longitude = longitudeStr ? parseFloat(longitudeStr) : null
   const imagesJson = formData.get('images') as string
   const images = imagesJson ? JSON.parse(imagesJson) : []
 
@@ -139,6 +146,8 @@ export async function createProduct(formData: FormData): Promise<{ error?: strin
       price,
       condition,
       location,
+      latitude,
+      longitude,
       images,
     })
     .select()
@@ -169,13 +178,17 @@ export async function updateProduct(id: number, formData: FormData) {
   const price = parseInt(formData.get('price') as string)
   const condition = formData.get('condition') as string
   const location = formData.get('location') as string
+  const latitudeStr = formData.get('latitude') as string
+  const longitudeStr = formData.get('longitude') as string
+  const latitude = latitudeStr ? parseFloat(latitudeStr) : null
+  const longitude = longitudeStr ? parseFloat(longitudeStr) : null
   const imagesJson = formData.get('images') as string
   const images = imagesJson ? JSON.parse(imagesJson) : []
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('products')
-    .update({ title, description, category, price, condition, location, images })
+    .update({ title, description, category, price, condition, location, latitude, longitude, images })
     .eq('id', id)
     .eq('user_id', user.id)
 

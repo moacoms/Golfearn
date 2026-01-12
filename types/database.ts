@@ -42,6 +42,8 @@ export interface Database {
           golf_started_at: string | null
           average_score: number | null
           location: string | null
+          latitude: number | null
+          longitude: number | null
           bio: string | null
           created_at: string
           updated_at: string
@@ -55,6 +57,8 @@ export interface Database {
           golf_started_at?: string | null
           average_score?: number | null
           location?: string | null
+          latitude?: number | null
+          longitude?: number | null
           bio?: string | null
           created_at?: string
           updated_at?: string
@@ -68,6 +72,8 @@ export interface Database {
           golf_started_at?: string | null
           average_score?: number | null
           location?: string | null
+          latitude?: number | null
+          longitude?: number | null
           bio?: string | null
           created_at?: string
           updated_at?: string
@@ -143,6 +149,8 @@ export interface Database {
           images: string[]
           status: 'selling' | 'reserved' | 'sold'
           location: string | null
+          latitude: number | null
+          longitude: number | null
           view_count: number
           created_at: string
           updated_at: string
@@ -158,6 +166,8 @@ export interface Database {
           images?: string[]
           status?: 'selling' | 'reserved' | 'sold'
           location?: string | null
+          latitude?: number | null
+          longitude?: number | null
           view_count?: number
           created_at?: string
           updated_at?: string
@@ -173,6 +183,8 @@ export interface Database {
           images?: string[]
           status?: 'selling' | 'reserved' | 'sold'
           location?: string | null
+          latitude?: number | null
+          longitude?: number | null
           view_count?: number
           created_at?: string
           updated_at?: string

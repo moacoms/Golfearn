@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const statusOptions = [
@@ -8,6 +8,13 @@ const statusOptions = [
   { id: 'selling', name: '판매중' },
   { id: 'reserved', name: '예약중' },
   { id: 'sold', name: '판매완료' },
+]
+
+const sortOptions = [
+  { id: 'latest', name: '최신순' },
+  { id: 'price_low', name: '가격 낮은순' },
+  { id: 'price_high', name: '가격 높은순' },
+  { id: 'distance', name: '가까운순' },
 ]
 
 function MarketFiltersInner({
@@ -21,15 +28,20 @@ function MarketFiltersInner({
   const currentCategory = searchParams.get('category') || 'all'
   const currentStatus = searchParams.get('status') || 'all'
   const currentSearch = searchParams.get('search') || ''
+  const currentSort = searchParams.get('sort') || 'latest'
+  const currentLat = searchParams.get('lat')
+  const currentLng = searchParams.get('lng')
 
   const [search, setSearch] = useState(currentSearch)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   // URL 검색어가 변경되면 로컬 상태 업데이트
   useEffect(() => {
     setSearch(currentSearch)
   }, [currentSearch])
 
-  const updateFilter = (key: string, value: string) => {
+  const updateFilter = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams)
     if (value === 'all' || value === '') {
       params.delete(key)
@@ -37,7 +49,45 @@ function MarketFiltersInner({
       params.set(key, value)
     }
     router.push(`/market?${params.toString()}`)
-  }
+  }, [searchParams, router])
+
+  // 현재 위치 가져오기
+  const getCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('이 브라우저에서는 위치 서비스를 지원하지 않습니다.')
+      return
+    }
+
+    setIsLoadingLocation(true)
+    setLocationError(null)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const params = new URLSearchParams(searchParams)
+        params.set('lat', latitude.toString())
+        params.set('lng', longitude.toString())
+        params.set('sort', 'distance')
+        router.push(`/market?${params.toString()}`)
+        setIsLoadingLocation(false)
+      },
+      (error) => {
+        console.error('위치 가져오기 실패:', error)
+        setLocationError('위치를 가져올 수 없습니다.')
+        setIsLoadingLocation(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }, [searchParams, router])
+
+  // 가까운순 선택 시 위치 권한 요청
+  const handleSortChange = useCallback((value: string) => {
+    if (value === 'distance' && !currentLat) {
+      getCurrentLocation()
+    } else {
+      updateFilter('sort', value)
+    }
+  }, [currentLat, getCurrentLocation, updateFilter])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,7 +178,48 @@ function MarketFiltersInner({
               ))}
             </select>
           </div>
+
+          {/* Sort */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium mb-2">정렬</label>
+            <select
+              className="input"
+              value={currentSort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              disabled={isLoadingLocation}
+            >
+              {sortOptions.map((sort) => (
+                <option key={sort.id} value={sort.id}>
+                  {sort.name}
+                  {sort.id === 'distance' && isLoadingLocation ? ' (위치 확인중...)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* 위치 오류 메시지 */}
+        {locationError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {locationError}
+          </div>
+        )}
+
+        {/* 현재 위치로 검색 버튼 */}
+        {!currentLat && (
+          <button
+            type="button"
+            onClick={getCurrentLocation}
+            disabled={isLoadingLocation}
+            className="btn btn-outline text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {isLoadingLocation ? '위치 확인중...' : '내 위치 근처 상품 보기'}
+          </button>
+        )}
 
         {/* 활성 필터 표시 */}
         {(currentSearch || currentCategory !== 'all' || currentStatus !== 'all') && (

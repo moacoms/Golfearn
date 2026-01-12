@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getProducts, ProductWithSeller } from '@/lib/actions/products'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, formatDistance, calculateDistance } from '@/lib/utils'
 import MarketFilters from './MarketFilters'
 
 const categories = [
@@ -59,7 +59,15 @@ function ProductCard({ product }: { product: ProductWithSeller }) {
                 {product.condition}급
               </span>
             )}
-            {product.location && <span>{product.location}</span>}
+            {product.distance_km !== undefined && (
+              <span className="flex items-center gap-1 text-primary">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                {formatDistance(product.distance_km)}
+              </span>
+            )}
+            {product.location && !product.distance_km && <span>{product.location}</span>}
           </div>
         </div>
       </article>
@@ -70,14 +78,61 @@ function ProductCard({ product }: { product: ProductWithSeller }) {
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; status?: string; search?: string }>
+  searchParams: Promise<{
+    category?: string
+    status?: string
+    search?: string
+    sort?: string
+    lat?: string
+    lng?: string
+  }>
 }) {
   const params = await searchParams
-  const products = await getProducts({
+  let products = await getProducts({
     category: params.category,
     status: params.status,
     search: params.search,
   })
+
+  // 사용자 위치가 있으면 거리 계산
+  const userLat = params.lat ? parseFloat(params.lat) : null
+  const userLng = params.lng ? parseFloat(params.lng) : null
+
+  if (userLat && userLng) {
+    products = products.map((product) => {
+      if (product.latitude && product.longitude) {
+        const distance = calculateDistance(
+          userLat,
+          userLng,
+          product.latitude,
+          product.longitude
+        )
+        return { ...product, distance_km: distance }
+      }
+      return product
+    })
+  }
+
+  // 정렬
+  const sort = params.sort || 'latest'
+  switch (sort) {
+    case 'price_low':
+      products = [...products].sort((a, b) => a.price - b.price)
+      break
+    case 'price_high':
+      products = [...products].sort((a, b) => b.price - a.price)
+      break
+    case 'distance':
+      if (userLat && userLng) {
+        products = [...products].sort((a, b) => {
+          const distA = a.distance_km ?? Infinity
+          const distB = b.distance_km ?? Infinity
+          return distA - distB
+        })
+      }
+      break
+    // 'latest'는 기본값으로 DB에서 이미 정렬됨
+  }
 
   return (
     <div className="py-12">

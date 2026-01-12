@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createProduct } from '@/lib/actions/products'
 import ImageUpload from '@/components/ImageUpload'
+import LocationPicker, { Location } from '@/components/LocationPicker'
 
 const categories = [
   { id: 'driver', name: '드라이버' },
@@ -27,6 +28,7 @@ export default function SellPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
+  const [location, setLocation] = useState<Location | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,6 +37,13 @@ export default function SellPage() {
 
     const formData = new FormData(e.currentTarget)
     formData.set('images', JSON.stringify(images))
+
+    // 위치 정보 추가
+    if (location) {
+      formData.set('location', location.address)
+      formData.set('latitude', location.lat.toString())
+      formData.set('longitude', location.lng.toString())
+    }
 
     const result = await createProduct(formData)
 
@@ -165,19 +174,19 @@ export default function SellPage() {
             </div>
           </div>
 
-          {/* 지역 */}
+          {/* 거래 희망 장소 */}
           <div className="mb-6">
-            <label htmlFor="location" className="block text-sm font-medium mb-2">
-              지역
+            <label className="block text-sm font-medium mb-2">
+              거래 희망 장소
             </label>
-            <input
-              id="location"
-              name="location"
-              type="text"
-              placeholder="예: 서울 강남"
-              className="input"
-              disabled={isSubmitting}
+            <LocationPicker
+              value={location}
+              onChange={setLocation}
+              placeholder="지도에서 거래 장소를 선택하세요"
             />
+            <p className="mt-2 text-xs text-muted">
+              정확한 주소는 구매자와 채팅 시 공유됩니다
+            </p>
           </div>
 
           {/* 설명 */}

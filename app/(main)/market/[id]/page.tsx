@@ -7,6 +7,7 @@ import ProductActions from './ProductActions'
 import ProductImageGallery from './ProductImageGallery'
 import FavoriteButton from './FavoriteButton'
 import ChatButton from './ChatButton'
+import ProductLocation from './ProductLocation'
 
 const categories: { [key: string]: string } = {
   driver: '드라이버',
@@ -151,6 +152,18 @@ export default async function ProductDetailPage({
             <div className="card">
               <p className="whitespace-pre-wrap">{product.description}</p>
             </div>
+          </div>
+        )}
+
+        {/* 거래 희망 장소 */}
+        {(product.latitude || product.location) && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4">거래 희망 장소</h2>
+            <ProductLocation
+              latitude={product.latitude}
+              longitude={product.longitude}
+              address={product.location}
+            />
           </div>
         )}
       </div>
