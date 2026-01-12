@@ -20,6 +20,8 @@ export default function LocationMap({
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries,
+    language: 'ko',
+    region: 'KR',
   })
 
   // API 키가 없을 때

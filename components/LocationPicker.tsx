@@ -45,6 +45,8 @@ export default function LocationPicker({
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries,
+    language: 'ko',
+    region: 'KR',
   })
 
   // 현재 위치 가져오기
