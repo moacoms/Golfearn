@@ -36,3 +36,32 @@ export function truncate(str: string, length: number) {
   if (str.length <= length) return str
   return str.slice(0, length) + '...'
 }
+
+// Haversine 공식으로 두 좌표 사이 거리 계산 (km)
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371 // 지구 반경 (km)
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+function toRad(deg: number): number {
+  return deg * (Math.PI / 180)
+}
+
+// 거리 포맷 (km 또는 m)
+export function formatDistance(distanceKm: number): string {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)}m`
+  }
+  return `${distanceKm.toFixed(1)}km`
+}

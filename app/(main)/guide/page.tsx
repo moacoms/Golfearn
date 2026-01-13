@@ -1,12 +1,20 @@
 import Link from 'next/link'
-import { guides, categories } from '@/lib/guides'
+import { guides, categories, getGuidesByCategory } from '@/lib/guides'
 
 export const metadata = {
   title: '입문 가이드 | Golfearn',
   description: '골프를 처음 시작하는 분들을 위한 체계적인 가이드. 42살에 골프를 시작한 경험을 바탕으로 작성했습니다.',
 }
 
-export default function GuidePage() {
+export default async function GuidePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}) {
+  const { category } = await searchParams
+  const selectedCategory = category || 'all'
+  const filteredGuides = getGuidesByCategory(selectedCategory)
+
   return (
     <div className="py-12">
       <div className="container">
@@ -22,23 +30,26 @@ export default function GuidePage() {
 
         {/* Categories */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          <Link href="/guide" className="btn btn-primary">
+          <Link
+            href="/guide"
+            className={`btn ${selectedCategory === 'all' ? 'btn-primary' : 'btn-outline'}`}
+          >
             전체
           </Link>
-          {categories.map((category) => (
+          {categories.map((cat) => (
             <Link
-              key={category.id}
-              href={`/guide?category=${category.id}`}
-              className="btn btn-outline"
+              key={cat.id}
+              href={`/guide?category=${cat.id}`}
+              className={`btn ${selectedCategory === cat.id ? 'btn-primary' : 'btn-outline'}`}
             >
-              {category.icon} {category.name}
+              {cat.icon} {cat.name}
             </Link>
           ))}
         </div>
 
         {/* Guide Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {guides.map((guide) => (
+          {filteredGuides.map((guide) => (
             <Link key={guide.slug} href={`/guide/${guide.slug}`}>
               <article className="card h-full hover:shadow-md transition-shadow cursor-pointer group">
                 <div className="flex items-center gap-2 text-sm text-muted mb-3">
