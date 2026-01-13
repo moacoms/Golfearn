@@ -161,6 +161,50 @@ create table public.messages (
 );
 ```
 
+### join_posts (조인 매칭)
+```sql
+create table public.join_posts (
+  id bigint primary key generated always as identity,
+  user_id uuid references public.profiles not null,
+  title text not null,
+  description text,
+  round_date date not null,
+  round_time time not null,
+  golf_course_name text not null,
+  golf_course_address text,
+  total_slots int not null default 4,
+  current_slots int not null default 1,
+  min_score int,
+  max_score int,
+  green_fee int,
+  cart_fee int,
+  caddie_fee int,
+  location_dong text,
+  location_gu text,
+  location_city text,
+  location_lat double precision,
+  location_lng double precision,
+  status text not null default 'recruiting',
+  view_count int not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+```
+
+### join_participants (조인 참가)
+```sql
+create table public.join_participants (
+  id bigint primary key generated always as identity,
+  join_post_id bigint references public.join_posts on delete cascade not null,
+  user_id uuid references public.profiles not null,
+  message text,
+  status text not null default 'pending',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(join_post_id, user_id)
+);
+```
+
 ---
 
 ## 폴더 구조
@@ -184,9 +228,14 @@ create table public.messages (
       /page.tsx                # 상품 목록
       /sell/page.tsx           # 판매 등록
       /[id]/page.tsx           # 상품 상세
+    /join                      # 조인 매칭
+      /page.tsx                # 조인 목록
+      /create/page.tsx         # 모집글 작성
+      /[id]/page.tsx           # 모집글 상세
     /mypage                    # 마이페이지
       /page.tsx
       /profile/page.tsx
+      /joins/page.tsx          # 내 조인 목록 (예정)
 /components
   /ui                          # 공통 UI 컴포넌트
   /layout                      # 레이아웃 컴포넌트
@@ -196,10 +245,18 @@ create table public.messages (
   /guide                       # 가이드 관련
   /community                   # 커뮤니티 관련
   /market                      # 중고거래 관련
+  /join                        # 조인 관련
+    /JoinCard.tsx              # 조인 카드
+  /location                    # 위치 관련
+    /LocationSettingModal.tsx
+    /LocationFilterChip.tsx
 /lib
   /supabase
     /client.ts                 # Supabase 클라이언트
     /server.ts                 # 서버 컴포넌트용
+  /actions
+    /products.ts               # 중고거래 Server Actions
+    /join.ts                   # 조인 매칭 Server Actions
   /utils.ts                    # 유틸리티 함수
 /content
   /guides                      # MDX 가이드 콘텐츠
@@ -207,6 +264,9 @@ create table public.messages (
   /images
 /types
   /database.ts                 # Supabase 타입
+/supabase
+  /migrations                  # DB 마이그레이션 파일
+/docs                          # 개발 문서
 ```
 
 ---
@@ -393,9 +453,11 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2025-01-07)
+## 개발 진행 현황 (2025-01-13 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 1월 1주차 (프로젝트 초기화)
 1. **프로젝트 초기화**
    - Next.js 14 + TypeScript + Tailwind CSS 3 설정
    - Supabase 클라이언트 설정 (client, server, middleware)
@@ -406,7 +468,7 @@ npx supabase gen types typescript --local > types/database.ts
    - 환경변수 설정 완료 (`.env.local`)
    - URL: `https://bfcmjumgfrblvyjuvmbk.supabase.co`
 
-3. **생성된 페이지**
+3. **기본 페이지 생성**
    - `/` - 랜딩페이지 (히어로, 기능소개, 사전예약 폼 UI)
    - `/login` - 로그인 페이지 (카카오 + 이메일)
    - `/signup` - 회원가입 페이지
@@ -415,23 +477,72 @@ npx supabase gen types typescript --local > types/database.ts
    - `/market` - 중고거래 장터
    - `/mypage` - 마이페이지
 
-4. **생성된 컴포넌트**
+4. **기본 컴포넌트 생성**
    - `components/layout/Header.tsx` - 반응형 헤더 (모바일 메뉴 포함)
    - `components/layout/Footer.tsx` - 푸터
-   - `components/ui/Button.tsx` - 버튼 컴포넌트
-   - `components/ui/Input.tsx` - 입력 컴포넌트
-   - `components/ui/Card.tsx` - 카드 컴포넌트
+   - `components/ui/Button.tsx`, `Input.tsx`, `Card.tsx`
 
-5. **설정 파일**
-   - `tailwind.config.js` - 커스텀 컬러 (primary, secondary 등)
-   - `types/database.ts` - Supabase 타입 정의
-   - `lib/utils.ts` - 유틸리티 함수 (formatDate, formatPrice 등)
+#### 1월 2주차 (위치 기반 기능)
+5. **위치 기반 중고거래 기능 (당근마켓 스타일)**
+   - Google Maps API 연동 (한글 지도)
+   - 판매 등록 시 지도에서 거래 희망 장소 선택
+   - 상품 상세 페이지에서 거래 장소 지도 표시
+   - 상품 목록 거리순 정렬
+
+6. **사용자 위치 설정 기능**
+   - GPS 현재 위치 감지
+   - 주소 검색 기능
+   - 검색 범위 선택 (1km, 3km, 5km, 10km, 20km)
+   - 마이페이지 프로필에서 동네 설정 UI
+
+7. **거리별 필터링**
+   - `LocationFilterChip` 컴포넌트: 전국/거리 범위 선택
+   - Haversine 공식으로 거리 계산
+   - 범위 내 상품만 필터링 + 거리순 정렬
+
+8. **위치 관련 컴포넌트**
+   - `components/location/LocationSettingModal.tsx` - 동네 설정 모달
+   - `components/location/LocationFilterChip.tsx` - 거리 필터 칩
+   - `components/location/LocationSearchInput.tsx` - 주소 검색
+   - `components/location/LocationDisplay.tsx` - 위치 표시
+
+9. **가이드 페이지 카테고리 필터 수정**
+   - searchParams를 사용한 카테고리 필터링
+
+#### 1월 3주차 (조인 매칭 기능)
+10. **골린이 조인 매칭 기능 (2025-01-13)**
+    - 배경: 골프 비용/난이도/접근성 문제 해결
+    - 100타 이상 초보 골퍼끼리 함께 라운딩
+    - DB 테이블: `join_posts`, `join_participants`
+    - RLS 정책 8개, 인덱스 6개
+
+11. **조인 페이지 구현**
+    - `/join` - 조인 목록 (날짜/위치/실력 필터)
+    - `/join/create` - 모집글 작성
+    - `/join/[id]` - 모집글 상세 + 참가 신청
+    - `components/join/JoinCard.tsx` - 조인 카드
+
+12. **조인 Server Actions** (`lib/actions/join.ts`)
+    - `getJoinPosts` - 목록 조회 (필터링)
+    - `createJoinPost` - 모집글 생성
+    - `applyToJoin` - 참가 신청
+    - `updateParticipantStatus` - 승인/거절
+    - 참가 인원 자동 업데이트 트리거
+
+13. **Vercel 배포 완료**
+    - 프로덕션 URL: https://www.golfearn.com
+    - 조인 매칭: https://www.golfearn.com/join
 
 ### 🔜 다음 작업 (우선순위)
-1. **Supabase DB 스키마 적용** - SQL Editor에서 테이블 생성
-2. **사전예약 기능 연동** - 랜딩페이지 폼 → Supabase 저장
-3. **카카오 로그인 구현** - Supabase Auth Provider 설정
-4. **Vercel 배포**
+1. **마이페이지 조인 탭** - `/mypage/joins`
+2. **조인 알림 기능** - 참가 신청/승인/거절 알림
+3. **조인 채팅 기능** - 참가자 간 소통
+4. **골프장 검색 API 연동** - 자동완성
+
+### 📋 추후 개발 예정
+- 골프장 정보/가격 비교
+- 연습장/레슨 매칭
+- AI 기반 매칭 추천
 
 ---
 
@@ -456,9 +567,12 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 ## 다음 단계
 
 1. [x] 서비스명 최종 확정 - **Golfearn**
-2. [ ] 도메인 구매 (golfearn.com / golfearn.kr)
+2. [x] 도메인 구매 - www.golfearn.com
 3. [x] Supabase 프로젝트 생성
 4. [x] Next.js 프로젝트 초기화
-5. [ ] Supabase DB 스키마 적용
-6. [ ] Vercel 연결
-7. [ ] 랜딩페이지 사전예약 기능 완성
+5. [x] Supabase DB 스키마 적용
+6. [x] Vercel 배포 완료 - https://www.golfearn.com
+7. [x] 위치 기반 중고거래 기능
+8. [x] 골린이 조인 매칭 기능
+9. [ ] 마이페이지 조인 탭
+10. [ ] 조인 알림/채팅 기능
