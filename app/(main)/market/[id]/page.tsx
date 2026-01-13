@@ -156,12 +156,12 @@ export default async function ProductDetailPage({
         )}
 
         {/* 거래 희망 장소 */}
-        {(product.latitude || product.location) && (
+        {(product.location_lat || product.location) && (
           <div className="mt-8">
             <h2 className="text-lg font-semibold mb-4">거래 희망 장소</h2>
             <ProductLocation
-              latitude={product.latitude}
-              longitude={product.longitude}
+              latitude={product.location_lat}
+              longitude={product.location_lng}
               address={product.location}
             />
           </div>

@@ -125,8 +125,28 @@ fd30969 - Fix guide page category filter to use searchParams
 
 ---
 
-## 다음 작업 예정
+## 완료된 추가 작업 (2025-01-12)
 
-1. 사용자 기본 위치 저장 (마이페이지에서 설정)
-2. 거리별 필터링 (1km, 3km, 5km 이내)
-3. 위치 기반 검색 성능 최적화 (PostGIS 또는 인덱스)
+### 1. 사용자 기본 위치 저장 (마이페이지에서 설정)
+- `LocationSettingModal` 컴포넌트: GPS 감지 + 주소 검색
+- `ProfileEditPage`에서 동네 설정 UI 제공
+- 검색 범위 선택: 1km, 3km, 5km, 10km, 20km
+
+### 2. 거리별 필터링
+- `LocationFilterChip` 컴포넌트: 전국/거리 범위 선택 드롭다운
+- `getProducts`에서 Haversine 공식으로 거리 계산
+- 범위 내 상품만 필터링 + 거리순 정렬
+
+### 관련 파일
+- `components/location/LocationSettingModal.tsx`
+- `components/location/LocationFilterChip.tsx`
+- `components/location/LocationSearchInput.tsx`
+- `lib/actions/location.ts`
+- `app/(main)/mypage/profile/page.tsx`
+
+---
+
+## 향후 작업 예정
+
+1. 위치 기반 검색 성능 최적화 (PostGIS 또는 인덱스)
+2. 동네 인증 기능 (실제 거주지 인증)

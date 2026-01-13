@@ -37,6 +37,7 @@ export default function Header() {
     { href: '/guide', label: '입문 가이드' },
     { href: '/community', label: '커뮤니티' },
     { href: '/market', label: '중고거래' },
+    { href: '/join', label: '조인 매칭' },
   ]
 
   return (

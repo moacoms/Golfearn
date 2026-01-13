@@ -386,3 +386,77 @@ export interface ParsedKoreanAddress {
   lat: number
   lng: number
 }
+
+// =============================================
+// 조인 매칭 관련 타입
+// =============================================
+
+// 조인 모집글 상태
+export type JoinPostStatus = 'recruiting' | 'full' | 'confirmed' | 'completed' | 'cancelled'
+
+// 참가 신청 상태
+export type ParticipantStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+
+// 조인 모집글
+export interface JoinPost {
+  id: number
+  user_id: string
+  title: string
+  description: string | null
+  round_date: string
+  round_time: string
+  golf_course_name: string
+  golf_course_address: string | null
+  total_slots: number
+  current_slots: number
+  min_score: number | null
+  max_score: number | null
+  green_fee: number | null
+  cart_fee: number | null
+  caddie_fee: number | null
+  location_dong: string | null
+  location_gu: string | null
+  location_city: string | null
+  location_lat: number | null
+  location_lng: number | null
+  status: JoinPostStatus
+  view_count: number
+  created_at: string
+  updated_at: string
+}
+
+// 호스트 정보가 포함된 조인 모집글
+export interface JoinPostWithHost extends JoinPost {
+  profiles: {
+    username: string | null
+    full_name: string | null
+    avatar_url: string | null
+    average_score: number | null
+    golf_started_at: string | null
+    location_dong: string | null
+  } | null
+  distance?: number
+  participants_count?: number
+}
+
+// 참가 신청
+export interface JoinParticipant {
+  id: number
+  join_post_id: number
+  user_id: string
+  message: string | null
+  status: ParticipantStatus
+  created_at: string
+  updated_at: string
+}
+
+// 프로필 정보가 포함된 참가자
+export interface ParticipantWithProfile extends JoinParticipant {
+  profiles: {
+    username: string | null
+    full_name: string | null
+    avatar_url: string | null
+    average_score: number | null
+    golf_started_at: string | null
+  } | null
+}
