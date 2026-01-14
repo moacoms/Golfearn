@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, use, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { getGolfCourseReviews, getGolfCourseAverageRating, GolfCourseReview } from '@/lib/actions/golf-course-reviews'
@@ -39,12 +40,10 @@ interface CourseDetail {
   }[]
 }
 
-export default function GolfCourseDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id: placeId } = use(params)
+export default function GolfCourseDetailPage() {
+  const params = useParams()
+  const placeId = params?.id as string
+
   const [course, setCourse] = useState<CourseDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,12 +66,17 @@ export default function GolfCourseDetailPage({
 
   // 리뷰 로드
   const loadReviews = useCallback(async () => {
-    const [reviewsData, stats] = await Promise.all([
-      getGolfCourseReviews(placeId),
-      getGolfCourseAverageRating(placeId),
-    ])
-    setReviews(reviewsData)
-    setReviewStats(stats)
+    if (!placeId) return
+    try {
+      const [reviewsData, stats] = await Promise.all([
+        getGolfCourseReviews(placeId),
+        getGolfCourseAverageRating(placeId),
+      ])
+      setReviews(reviewsData)
+      setReviewStats(stats)
+    } catch (err) {
+      console.error('Error loading reviews:', err)
+    }
   }, [placeId])
 
   useEffect(() => {
@@ -80,9 +84,15 @@ export default function GolfCourseDetailPage({
   }, [loadReviews])
 
   useEffect(() => {
+    if (!placeId) {
+      setError('잘못된 접근입니다.')
+      setIsLoading(false)
+      return
+    }
+
     const fetchDetails = async () => {
       try {
-        const response = await fetch(`/api/places/details?place_id=${placeId}`)
+        const response = await fetch(`/api/places/details?place_id=${encodeURIComponent(placeId)}`)
 
         if (!response.ok) {
           throw new Error('골프장 정보를 가져올 수 없습니다.')
@@ -91,6 +101,10 @@ export default function GolfCourseDetailPage({
         const data = await response.json()
         if (data.error) {
           throw new Error(data.error)
+        }
+
+        if (!data.result) {
+          throw new Error('골프장 정보가 없습니다.')
         }
 
         setCourse(data.result)
@@ -171,16 +185,18 @@ export default function GolfCourseDetailPage({
         </Link>
 
         {/* 사진 갤러리 */}
-        {course.photos.length > 0 && (
+        {course.photos && course.photos.length > 0 && (
           <div className="mb-6">
             {/* 메인 사진 */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 mb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={getPhotoUrl(course.photos[selectedPhotoIndex].reference)}
-                alt={course.name}
-                className="w-full h-full object-cover"
-              />
+              {course.photos[selectedPhotoIndex]?.reference && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={getPhotoUrl(course.photos[selectedPhotoIndex].reference)}
+                  alt={course.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             {/* 썸네일 */}
@@ -194,12 +210,14 @@ export default function GolfCourseDetailPage({
                       selectedPhotoIndex === index ? 'ring-2 ring-primary' : ''
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getPhotoUrl(photo.reference, 200)}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                    {photo?.reference && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getPhotoUrl(photo.reference, 200)}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </button>
                 ))}
               </div>
@@ -314,7 +332,7 @@ export default function GolfCourseDetailPage({
         )}
 
         {/* Google 리뷰 */}
-        {course.google_reviews.length > 0 && (
+        {course.google_reviews && course.google_reviews.length > 0 && (
           <div className="card mb-6">
             <h2 className="font-semibold mb-4">Google 리뷰</h2>
             <div className="space-y-4">

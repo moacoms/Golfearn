@@ -17,17 +17,43 @@ interface GolfCourse {
   distance: number
 }
 
+// 한국 주요 도시/지역 좌표
+const KOREA_REGIONS = [
+  { name: '서울', lat: 37.5665, lng: 126.978 },
+  { name: '경기 북부 (의정부)', lat: 37.7381, lng: 127.0337 },
+  { name: '경기 남부 (수원)', lat: 37.2636, lng: 127.0286 },
+  { name: '인천', lat: 37.4563, lng: 126.7052 },
+  { name: '부산', lat: 35.1796, lng: 129.0756 },
+  { name: '대구', lat: 35.8714, lng: 128.6014 },
+  { name: '대전', lat: 36.3504, lng: 127.3845 },
+  { name: '광주', lat: 35.1595, lng: 126.8526 },
+  { name: '울산', lat: 35.5384, lng: 129.3114 },
+  { name: '세종', lat: 36.4801, lng: 127.2890 },
+  { name: '강원 (춘천)', lat: 37.8813, lng: 127.7298 },
+  { name: '충북 (청주)', lat: 36.6424, lng: 127.4890 },
+  { name: '충남 (천안)', lat: 36.8151, lng: 127.1139 },
+  { name: '전북 (전주)', lat: 35.8242, lng: 127.1480 },
+  { name: '전남 (목포)', lat: 34.8118, lng: 126.3922 },
+  { name: '경북 (포항)', lat: 36.0190, lng: 129.3435 },
+  { name: '경남 (창원)', lat: 35.2281, lng: 128.6811 },
+  { name: '제주', lat: 33.4996, lng: 126.5312 },
+]
+
 export default function GolfCoursesPage() {
   const [courses, setCourses] = useState<GolfCourse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [radius, setRadius] = useState(30) // km
+  const [selectedRegion, setSelectedRegion] = useState<string>('')
+  const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'failed' | 'manual'>('loading')
 
   // 위치 가져오기
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     if (!navigator.geolocation) {
-      setError('브라우저에서 위치 서비스를 지원하지 않습니다.')
+      setLocationStatus('failed')
       setIsLoading(false)
       return
     }
@@ -38,16 +64,27 @@ export default function GolfCoursesPage() {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         })
+        setLocationStatus('success')
       },
       (err) => {
         console.error('Geolocation error:', err)
-        // 기본 위치: 서울 시청
-        setUserLocation({ lat: 37.5665, lng: 126.978 })
-        setError('위치를 가져올 수 없어 서울 기준으로 검색합니다.')
+        setLocationStatus('failed')
+        setIsLoading(false)
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }, [])
+
+  // 지역 선택 시 위치 업데이트
+  const handleRegionSelect = (regionName: string) => {
+    const region = KOREA_REGIONS.find(r => r.name === regionName)
+    if (region) {
+      setSelectedRegion(regionName)
+      setUserLocation({ lat: region.lat, lng: region.lng })
+      setLocationStatus('manual')
+      setError(null)
+    }
+  }
 
   // 골프장 검색
   useEffect(() => {
@@ -121,33 +158,83 @@ export default function GolfCoursesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">내 주변 골프장</h1>
           <p className="text-muted">
-            {userLocation
-              ? `현재 위치 기준 ${radius}km 이내 골프장을 찾아드립니다.`
-              : '위치 정보를 확인 중입니다...'}
+            {locationStatus === 'loading' && '위치 정보를 확인 중입니다...'}
+            {locationStatus === 'success' && `현재 위치 기준 ${radius}km 이내 골프장을 찾아드립니다.`}
+            {locationStatus === 'manual' && `${selectedRegion} 기준 ${radius}km 이내 골프장을 찾아드립니다.`}
+            {locationStatus === 'failed' && !userLocation && '지역을 선택해주세요.'}
           </p>
         </div>
 
-        {/* 필터 */}
-        <div className="card mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">검색 반경:</label>
-            <div className="flex gap-2">
-              {[10, 30, 50, 100].map((r) => (
+        {/* 위치 선택 (위치 가져오기 실패 시 또는 수동 선택 모드) */}
+        {(locationStatus === 'failed' || locationStatus === 'manual') && (
+          <div className="card mb-6 border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="font-medium">지역 선택</span>
+              {locationStatus === 'failed' && (
+                <span className="text-sm text-muted ml-2">(위치 정보를 가져올 수 없습니다)</span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {KOREA_REGIONS.map((region) => (
                 <button
-                  key={r}
-                  onClick={() => setRadius(r)}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                    radius === r
+                  key={region.name}
+                  onClick={() => handleRegionSelect(region.name)}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                    selectedRegion === region.name
                       ? 'bg-primary text-white'
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      : 'bg-white border hover:border-primary hover:text-primary'
                   }`}
                 >
-                  {r}km
+                  {region.name}
                 </button>
               ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* 위치 변경 버튼 (위치 가져오기 성공 시) */}
+        {locationStatus === 'success' && (
+          <div className="mb-4">
+            <button
+              onClick={() => setLocationStatus('manual')}
+              className="text-sm text-primary hover:underline flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              다른 지역에서 찾기
+            </button>
+          </div>
+        )}
+
+        {/* 필터 */}
+        {userLocation && (
+          <div className="card mb-6">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium">검색 반경:</label>
+              <div className="flex gap-2">
+                {[10, 30, 50, 100].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRadius(r)}
+                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                      radius === r
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    {r}km
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 에러 메시지 */}
         {error && (
@@ -157,15 +244,42 @@ export default function GolfCoursesPage() {
         )}
 
         {/* 로딩 */}
-        {isLoading && (
+        {isLoading && userLocation && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
             <p className="text-muted">골프장을 검색 중입니다...</p>
           </div>
         )}
 
+        {/* 지역 선택 안내 (위치 실패 + 지역 미선택) */}
+        {locationStatus === 'failed' && !userLocation && (
+          <div className="text-center py-20">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-300 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <p className="text-muted mb-2">위의 지역을 선택하면</p>
+            <p className="text-muted">해당 지역의 골프장을 검색합니다.</p>
+          </div>
+        )}
+
         {/* 결과 없음 */}
-        {!isLoading && courses.length === 0 && (
+        {!isLoading && userLocation && courses.length === 0 && (
           <div className="text-center py-20">
             <svg
               className="w-16 h-16 mx-auto text-gray-300 mb-4"
