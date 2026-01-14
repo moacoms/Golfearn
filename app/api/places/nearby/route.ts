@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Google Places Nearby Search API
+    // Google Places Text Search API (더 정확한 골프장 검색)
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=golf_course&language=ko&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=골프장+OR+골프클럽+OR+CC+OR+컨트리클럽&location=${lat},${lng}&radius=${radius}&type=golf_course&language=ko&region=kr&key=${apiKey}`
     )
 
     if (!response.ok) {
@@ -32,10 +32,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [] })
     }
 
-    // 결과 가공
-    const golfCourses = (data.results || []).map((place: {
+    // 골프장 관련 키워드로 필터링
+    const golfKeywords = ['골프', 'CC', '컨트리', 'Country', 'Golf', '클럽', 'Club', '힐스', 'Hills', '레이크', 'Lake', '파크', 'Park']
+
+    const filteredResults = (data.results || []).filter((place: {
       name: string
-      vicinity: string
+      types?: string[]
+    }) => {
+      // 이름에 골프 관련 키워드가 있는지 확인
+      const hasGolfKeyword = golfKeywords.some(keyword =>
+        place.name.toLowerCase().includes(keyword.toLowerCase())
+      )
+      // types에 golf_course가 있는지 확인
+      const isGolfCourseType = place.types?.includes('golf_course')
+
+      return hasGolfKeyword || isGolfCourseType
+    })
+
+    // 결과 가공
+    const golfCourses = filteredResults.map((place: {
+      name: string
+      formatted_address?: string
+      vicinity?: string
       place_id: string
       geometry: { location: { lat: number; lng: number } }
       rating?: number
@@ -55,7 +73,7 @@ export async function GET(request: NextRequest) {
       return {
         place_id: place.place_id,
         name: place.name,
-        address: place.vicinity,
+        address: place.formatted_address || place.vicinity || '',
         lat: place.geometry.location.lat,
         lng: place.geometry.location.lng,
         rating: place.rating || null,
