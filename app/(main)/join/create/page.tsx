@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createJoinPost } from '@/lib/actions/join'
+import GolfCourseSearch from '@/components/join/GolfCourseSearch'
 
 // 시간 옵션 생성 (05:00 ~ 18:00, 30분 단위)
 const timeOptions: string[] = []
@@ -26,6 +27,8 @@ export default function CreateJoinPage() {
     round_time: '07:00',
     golf_course_name: '',
     golf_course_address: '',
+    location_lat: '',
+    location_lng: '',
     total_slots: '4',
     min_score: '',
     max_score: '',
@@ -39,6 +42,17 @@ export default function CreateJoinPage() {
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  // 골프장 선택 핸들러
+  const handleGolfCourseChange = (name: string, address: string, lat?: number, lng?: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      golf_course_name: name,
+      golf_course_address: address,
+      location_lat: lat?.toString() || '',
+      location_lng: lng?.toString() || '',
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -180,35 +194,29 @@ export default function CreateJoinPage() {
 
               {/* 골프장 */}
               <div>
-                <label htmlFor="golf_course_name" className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2">
                   골프장명 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="golf_course_name"
-                  name="golf_course_name"
-                  type="text"
-                  required
+                <GolfCourseSearch
                   value={formData.golf_course_name}
-                  onChange={handleChange}
-                  placeholder="예: 레이크힐스 제주 CC"
-                  className="input"
+                  address={formData.golf_course_address}
+                  onChange={handleGolfCourseChange}
                 />
+                <p className="text-xs text-muted mt-1">
+                  골프장을 검색하면 주소가 자동으로 입력됩니다
+                </p>
               </div>
 
-              <div>
-                <label htmlFor="golf_course_address" className="block text-sm font-medium mb-2">
-                  골프장 주소
-                </label>
-                <input
-                  id="golf_course_address"
-                  name="golf_course_address"
-                  type="text"
-                  value={formData.golf_course_address}
-                  onChange={handleChange}
-                  placeholder="예: 경기도 용인시 처인구"
-                  className="input"
-                />
-              </div>
+              {formData.golf_course_address && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    골프장 주소
+                  </label>
+                  <p className="px-4 py-3 bg-gray-50 rounded-lg text-gray-700">
+                    {formData.golf_course_address}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

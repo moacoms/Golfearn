@@ -8,6 +8,7 @@ import {
   ParticipantWithProfile,
   ParticipantStatus,
 } from '@/types/database'
+import { notifyJoinApplication, notifyJoinApproved, notifyJoinRejected } from './notifications'
 
 // Haversine 거리 계산 (km)
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -448,7 +449,7 @@ export async function applyToJoin(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: post } = await (supabase as any)
     .from('join_posts')
-    .select('user_id, status, current_slots, total_slots')
+    .select('user_id, title, status, current_slots, total_slots')
     .eq('id', joinPostId)
     .single()
 
@@ -503,6 +504,17 @@ export async function applyToJoin(
       return { error: '신청에 실패했습니다.' }
     }
   }
+
+  // 호스트에게 알림 발송
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: applicantProfile } = await (supabase as any)
+    .from('profiles')
+    .select('username, full_name')
+    .eq('id', user.id)
+    .single()
+
+  const applicantName = applicantProfile?.username || applicantProfile?.full_name || '익명'
+  await notifyJoinApplication(post.user_id, applicantName, joinPostId, post.title)
 
   revalidatePath(`/join/${joinPostId}`)
   revalidatePath('/mypage/joins')
@@ -559,7 +571,7 @@ export async function updateParticipantStatus(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: participant } = await (supabase as any)
     .from('join_participants')
-    .select('join_post_id')
+    .select('join_post_id, user_id')
     .eq('id', participantId)
     .single()
 
@@ -571,7 +583,7 @@ export async function updateParticipantStatus(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: post } = await (supabase as any)
     .from('join_posts')
-    .select('user_id')
+    .select('user_id, title')
     .eq('id', participant.join_post_id)
     .single()
 
@@ -588,6 +600,13 @@ export async function updateParticipantStatus(
   if (error) {
     console.error('Error updating participant status:', error)
     return { error: '처리에 실패했습니다.' }
+  }
+
+  // 신청자에게 알림 발송
+  if (status === 'approved') {
+    await notifyJoinApproved(participant.user_id, participant.join_post_id, post.title)
+  } else if (status === 'rejected') {
+    await notifyJoinRejected(participant.user_id, participant.join_post_id, post.title)
   }
 
   revalidatePath(`/join/${participant.join_post_id}`)
