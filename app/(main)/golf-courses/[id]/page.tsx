@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { getGolfCourseReviews, getGolfCourseAverageRating, GolfCourseReview } from '@/lib/actions/golf-course-reviews'
@@ -66,18 +66,18 @@ export default function GolfCourseDetailPage({
   }, [])
 
   // 리뷰 로드
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     const [reviewsData, stats] = await Promise.all([
       getGolfCourseReviews(placeId),
       getGolfCourseAverageRating(placeId),
     ])
     setReviews(reviewsData)
     setReviewStats(stats)
-  }
+  }, [placeId])
 
   useEffect(() => {
     loadReviews()
-  }, [placeId])
+  }, [loadReviews])
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -417,7 +417,7 @@ export default function GolfCourseDetailPage({
           )}
 
           {/* 리뷰 작성 폼 */}
-          {currentUserId ? (
+          {currentUserId && course ? (
             <div className="mb-6">
               <ReviewForm
                 placeId={placeId}
@@ -425,14 +425,14 @@ export default function GolfCourseDetailPage({
                 onSuccess={loadReviews}
               />
             </div>
-          ) : (
+          ) : !currentUserId && course ? (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
               <p className="text-muted mb-2">리뷰를 작성하려면 로그인이 필요합니다.</p>
               <Link href="/login" className="btn btn-primary btn-sm">
                 로그인
               </Link>
             </div>
-          )}
+          ) : null}
 
           {/* 리뷰 목록 */}
           <ReviewList
