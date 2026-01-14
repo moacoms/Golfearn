@@ -453,7 +453,7 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2025-01-13 업데이트)
+## 개발 진행 현황 (2025-01-14 업데이트)
 
 ### ✅ 완료된 작업
 
@@ -533,15 +533,39 @@ npx supabase gen types typescript --local > types/database.ts
     - 프로덕션 URL: https://www.golfearn.com
     - 조인 매칭: https://www.golfearn.com/join
 
+14. **마이페이지 조인 탭** - `/mypage/joins`
+    - 내가 만든 조인, 참가한 조인 목록
+    - 참가자 승인/거절 관리
+
+15. **조인 알림 기능**
+    - 참가 신청/승인/거절 실시간 알림
+    - `/mypage/notifications` 알림 목록
+
+16. **조인 채팅 기능**
+    - `/join/[id]/chat` 참가자 간 실시간 채팅
+    - Supabase Realtime 연동
+
+#### 1월 3주차 (골프장 검색 기능)
+17. **골프장 검색 기능 (2025-01-14)**
+    - Google Places API 연동 (Text Search, Details API)
+    - `/golf-courses` - 내 주변 골프장 목록
+    - `/golf-courses/[id]` - 골프장 상세 (사진, 영업시간, 리뷰)
+    - 위치 정보 실패 시 18개 한국 주요 지역 수동 선택
+    - 골프장 리뷰 기능 (Supabase DB)
+
+18. **이메일 인증 설정**
+    - Supabase 이메일 인증 ON
+    - 이메일 템플릿 한글화 완료
+    - Custom SMTP 설정 방법 문서화 (CLAUDE.md)
+
 ### 🔜 다음 작업 (우선순위)
-1. **마이페이지 조인 탭** - `/mypage/joins`
-2. **조인 알림 기능** - 참가 신청/승인/거절 알림
-3. **조인 채팅 기능** - 참가자 간 소통
-4. **골프장 검색 API 연동** - 자동완성
+1. **이메일 발신자 변경** - Custom SMTP (Resend) 설정
+2. **레슨프로 매칭 기능**
+3. **AI 클럽 추천 기능**
 
 ### 📋 추후 개발 예정
-- 골프장 정보/가격 비교
-- 연습장/레슨 매칭
+- 골프장 가격 비교
+- 연습장 정보/검색
 - AI 기반 매칭 추천
 
 ---
@@ -566,6 +590,7 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 
 ## 다음 단계
 
+### ✅ 완료
 1. [x] 서비스명 최종 확정 - **Golfearn**
 2. [x] 도메인 구매 - www.golfearn.com
 3. [x] Supabase 프로젝트 생성
@@ -574,5 +599,90 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 6. [x] Vercel 배포 완료 - https://www.golfearn.com
 7. [x] 위치 기반 중고거래 기능
 8. [x] 골린이 조인 매칭 기능
-9. [ ] 마이페이지 조인 탭
-10. [ ] 조인 알림/채팅 기능
+9. [x] 마이페이지 조인 탭
+10. [x] 조인 알림/채팅 기능
+11. [x] 골프장 검색 기능 (Google Places API)
+12. [x] 이메일 인증 설정 및 템플릿 한글화
+
+### 📋 진행 예정
+13. [ ] 이메일 발신자 변경 (Custom SMTP - Resend)
+14. [ ] 레슨프로 매칭 기능
+15. [ ] AI 클럽 추천 기능
+
+---
+
+## Supabase 이메일 인증 설정
+
+### 현재 상태
+- 이메일 인증: **ON** (Supabase Authentication → Providers → Email → Confirm email)
+- 발신자: `noreply@mail.app.supabase.io` (Supabase 기본)
+- 템플릿: 한글화 완료
+
+### 이메일 템플릿 (한글)
+
+**위치**: Supabase Dashboard → Authentication → Email Templates → Confirm signup
+
+**Subject:**
+```
+[Golfearn] 이메일 인증을 완료해주세요
+```
+
+**Body:**
+```html
+<h2>Golfearn 회원가입을 환영합니다! 🏌️</h2>
+
+<p>안녕하세요,</p>
+
+<p>아래 버튼을 클릭하여 이메일 인증을 완료해주세요.</p>
+
+<p>
+  <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+    이메일 인증하기
+  </a>
+</p>
+
+<p>또는 아래 링크를 브라우저에 붙여넣기 해주세요:</p>
+<p style="word-break: break-all; color: #666;">{{ .ConfirmationURL }}</p>
+
+<p style="color: #999; font-size: 12px; margin-top: 32px;">
+  본인이 가입하지 않으셨다면 이 메일을 무시해주세요.<br>
+  - Golfearn 팀
+</p>
+```
+
+### 📋 TODO: Custom SMTP 설정 (발신자 변경)
+
+발신자를 `noreply@golfearn.com`으로 변경하려면 Custom SMTP 설정 필요
+
+**1. Resend 가입** (https://resend.com)
+- 무료: 3,000건/월
+- 유료: $20/월 (50,000건)
+
+**2. 도메인 인증**
+- Resend Dashboard → Domains → Add Domain
+- `golfearn.com` 추가
+- DNS 레코드 추가:
+  ```
+  Type: TXT
+  Name: resend._domainkey
+  Value: (Resend에서 제공)
+  ```
+
+**3. API Key 발급**
+- Resend → API Keys → Create API Key
+
+**4. Supabase SMTP 설정**
+- Supabase Dashboard → Project Settings → Authentication → SMTP Settings
+- Enable Custom SMTP: ON
+  ```
+  Host: smtp.resend.com
+  Port: 465
+  User: resend
+  Password: re_xxxxxxxxx (API Key)
+  Sender email: noreply@golfearn.com
+  Sender name: Golfearn
+  ```
+
+**5. 테스트**
+- 회원가입 후 이메일 수신 확인
+- 발신자가 `noreply@golfearn.com`인지 확인
