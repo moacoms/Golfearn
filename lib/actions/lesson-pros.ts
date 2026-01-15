@@ -301,3 +301,149 @@ export async function hasUserReviewed(proId: number): Promise<boolean> {
 
   return !!data
 }
+
+// 레슨프로 등록 데이터 타입
+export interface RegisterLessonProData {
+  name: string
+  introduction?: string
+  experienceYears?: number
+  specialties?: string[]
+  certifications?: string[]
+  regions?: string[]
+  lessonTypes?: string[]
+  priceIndividual?: number
+  priceGroup?: number
+  availableTimes?: string
+  profileImage?: string
+  galleryImages?: string[]
+  contactPhone?: string
+  contactKakao?: string
+  instagram?: string
+  youtube?: string
+  locationAddress?: string
+}
+
+// 레슨프로 등록
+export async function registerLessonPro(
+  data: RegisterLessonProData
+): Promise<{ error?: string; success?: boolean; proId?: number }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: '로그인이 필요합니다.' }
+  }
+
+  if (!data.name.trim()) {
+    return { error: '이름을 입력해주세요.' }
+  }
+
+  // 이미 등록된 프로인지 확인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingPro } = await (supabase as any)
+    .from('lesson_pros')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (existingPro) {
+    return { error: '이미 레슨프로로 등록되어 있습니다.' }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: newPro, error } = await (supabase as any)
+    .from('lesson_pros')
+    .insert({
+      user_id: user.id,
+      name: data.name.trim(),
+      introduction: data.introduction?.trim() || null,
+      experience_years: data.experienceYears || null,
+      specialties: data.specialties || null,
+      certifications: data.certifications || null,
+      regions: data.regions || null,
+      lesson_types: data.lessonTypes || null,
+      price_individual: data.priceIndividual || null,
+      price_group: data.priceGroup || null,
+      available_times: data.availableTimes?.trim() || null,
+      profile_image: data.profileImage || null,
+      gallery_images: data.galleryImages || null,
+      contact_phone: data.contactPhone?.trim() || null,
+      contact_kakao: data.contactKakao?.trim() || null,
+      instagram: data.instagram?.trim() || null,
+      youtube: data.youtube?.trim() || null,
+      location_address: data.locationAddress?.trim() || null,
+      is_active: true,
+      is_verified: false,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Error registering lesson pro:', error)
+    return { error: '레슨프로 등록에 실패했습니다.' }
+  }
+
+  revalidatePath('/lesson-pro')
+  return { success: true, proId: newPro.id }
+}
+
+// 내 레슨프로 정보 조회
+export async function getMyLessonPro(): Promise<LessonPro | null> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('lesson_pros')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (error) {
+    return null
+  }
+
+  return data as LessonPro
+}
+
+// 레슨프로 프로필 이미지 업로드
+export async function uploadLessonProImage(
+  formData: FormData
+): Promise<{ error?: string; url?: string }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: '로그인이 필요합니다.' }
+  }
+
+  const file = formData.get('file') as File
+  if (!file) {
+    return { error: '파일을 선택해주세요.' }
+  }
+
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${user.id}/${Date.now()}.${fileExt}`
+
+  const { error } = await supabase.storage
+    .from('lesson-pro-images')
+    .upload(fileName, file)
+
+  if (error) {
+    console.error('Error uploading image:', error)
+    return { error: '이미지 업로드에 실패했습니다.' }
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('lesson-pro-images')
+    .getPublicUrl(fileName)
+
+  return { url: publicUrl }
+}

@@ -51,6 +51,9 @@ export default async function LessonProPage({
             <h1 className="text-3xl font-bold mb-2">레슨프로 찾기</h1>
             <p className="text-muted">골린이 전문 프로님들을 만나보세요</p>
           </div>
+          <Link href="/lesson-pro/register" className="btn btn-primary">
+            레슨프로 등록하기
+          </Link>
         </div>
 
         {/* 필터 */}
@@ -178,9 +181,12 @@ export default async function LessonProPage({
               </svg>
             </div>
             <p className="text-muted text-lg mb-2">등록된 레슨프로가 없습니다</p>
-            <p className="text-muted text-sm">
+            <p className="text-muted text-sm mb-6">
               조건을 변경하여 다시 검색해보세요
             </p>
+            <Link href="/lesson-pro/register" className="btn btn-primary">
+              레슨프로로 등록하기
+            </Link>
           </div>
         )}
       </div>
