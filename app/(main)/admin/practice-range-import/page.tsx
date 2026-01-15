@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { importLessonProFromPlace, ImportLessonProData } from '@/lib/actions/lesson-pros'
-import { regionOptions } from '@/lib/lesson-pro-constants'
+import { importPracticeRangeFromPlace, ImportPracticeRangeData } from '@/lib/actions/practice-ranges'
+import { practiceRangeRegionOptions } from '@/lib/practice-range-constants'
 
 interface PlaceResult {
   name: string
@@ -16,8 +16,8 @@ interface PlaceResult {
   photo_reference: string | null
 }
 
-export default function LessonProImportPage() {
-  const [query, setQuery] = useState('골프 레슨')
+export default function PracticeRangeImportPage() {
+  const [query, setQuery] = useState('골프 연습장')
   const [region, setRegion] = useState('')
   const [results, setResults] = useState<PlaceResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -75,7 +75,7 @@ export default function LessonProImportPage() {
         photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photo_reference}&key=${apiKey}`
       }
 
-      const data: ImportLessonProData = {
+      const data: ImportPracticeRangeData = {
         name: place.name,
         address: place.address,
         placeId: place.place_id,
@@ -87,7 +87,7 @@ export default function LessonProImportPage() {
         photoUrl: photoUrl || undefined,
       }
 
-      const result = await importLessonProFromPlace(data)
+      const result = await importPracticeRangeFromPlace(data)
 
       if (result.error) {
         setMessage(result.error)
@@ -109,8 +109,8 @@ export default function LessonProImportPage() {
   return (
     <div className="py-12">
       <div className="container max-w-4xl">
-        <h1 className="text-3xl font-bold mb-2">레슨프로 데이터 가져오기</h1>
-        <p className="text-muted mb-8">Google Places에서 골프 레슨 업체를 검색하여 등록합니다</p>
+        <h1 className="text-3xl font-bold mb-2">연습장 데이터 가져오기</h1>
+        <p className="text-muted mb-8">Google Places에서 골프 연습장을 검색하여 등록합니다</p>
 
         {/* 검색 폼 */}
         <div className="card mb-6">
@@ -121,7 +121,7 @@ export default function LessonProImportPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="골프 레슨, 골프 아카데미, 골프 스쿨..."
+                placeholder="골프 연습장, 스크린골프, 골프존..."
                 className="w-full px-4 py-3 border rounded-lg"
               />
             </div>
@@ -133,7 +133,7 @@ export default function LessonProImportPage() {
                 className="w-full px-4 py-3 border rounded-lg"
               >
                 <option value="">전체 지역</option>
-                {regionOptions.map((option) => (
+                {practiceRangeRegionOptions.map((option) => (
                   <option key={option.value} value={option.label}>
                     {option.label}
                   </option>
@@ -235,15 +235,21 @@ export default function LessonProImportPage() {
 
         {/* 안내 */}
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold mb-2">사용 방법</h3>
-          <ol className="list-decimal list-inside text-sm text-muted space-y-1">
-            <li>검색어와 지역을 선택하고 검색 버튼을 클릭합니다</li>
-            <li>검색 결과에서 등록할 업체의 "등록" 버튼을 클릭합니다</li>
-            <li>등록된 업체는 /lesson-pro 페이지에서 확인할 수 있습니다</li>
-          </ol>
-          <p className="text-xs text-muted mt-4">
+          <h3 className="font-semibold mb-2">추천 검색어</h3>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {['골프 연습장', '스크린골프', '골프존', '실내골프', '야외 연습장'].map((keyword) => (
+              <button
+                key={keyword}
+                onClick={() => setQuery(keyword)}
+                className="px-3 py-1 bg-white border rounded-full text-sm hover:border-primary"
+              >
+                {keyword}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted">
             * Google Places API 사용량에 따라 비용이 발생할 수 있습니다<br />
-            * 등록된 정보는 관리자가 직접 수정할 수 있습니다
+            * 등록된 연습장은 /practice-range 페이지에서 확인할 수 있습니다
           </p>
         </div>
       </div>

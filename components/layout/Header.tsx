@@ -54,6 +54,7 @@ export default function Header() {
     { href: '/community', label: '커뮤니티' },
     { href: '/market', label: '중고거래' },
     { href: '/golf-courses', label: '골프장' },
+    { href: '/practice-range', label: '연습장' },
     { href: '/lesson-pro', label: '레슨프로' },
     { href: '/join', label: '조인' },
   ]

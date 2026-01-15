@@ -453,7 +453,7 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2025-01-14 업데이트)
+## 개발 진행 현황 (2025-01-15 업데이트)
 
 ### ✅ 완료된 작업
 
@@ -558,15 +558,48 @@ npx supabase gen types typescript --local > types/database.ts
     - 이메일 템플릿 한글화 완료
     - Custom SMTP 설정 방법 문서화 (CLAUDE.md)
 
+#### 1월 3주차 (2025-01-15)
+19. **SEO 최적화**
+    - `app/robots.ts` - 검색엔진 크롤링 규칙
+    - `app/sitemap.ts` - 동적 사이트맵 생성
+    - `app/layout.tsx` - 메타데이터 강화 (OpenGraph, Twitter Cards)
+
+20. **커뮤니티 좋아요/북마크 기능**
+    - 게시글 좋아요 토글
+    - 게시글 북마크 토글
+    - `/mypage/bookmarks` - 북마크한 글 목록
+    - DB 테이블: `post_likes`, `post_bookmarks`
+
+21. **랜딩페이지 UI 개선**
+    - Stats 섹션 추가 (사용자 수, 거래 건수 등)
+    - Why 섹션 추가 (서비스 선택 이유)
+    - Testimonials 섹션 추가 (사용자 후기)
+    - 모바일 반응형 개선
+
+22. **레슨프로 매칭 기능**
+    - `/lesson-pro` - 레슨프로 목록 (필터: 지역, 전문 분야, 레슨 유형)
+    - `/lesson-pro/[id]` - 레슨프로 상세 (프로필, 리뷰, 문의하기)
+    - `/lesson-pro/register` - 레슨프로 등록 (4단계 폼)
+    - 리뷰 작성/삭제, 레슨 문의 기능
+    - DB 테이블: `lesson_pros`, `lesson_pro_reviews`, `lesson_inquiries`
+    - 샘플 데이터 6명 등록
+
+23. **연습장 기능**
+    - `/practice-range` - 연습장 목록 (필터: 지역, 시설)
+    - `/practice-range/[id]` - 연습장 상세
+    - `/admin/practice-range-import` - Google Places API로 연습장 데이터 가져오기
+    - DB 테이블: `practice_ranges`
+
 ### 🔜 다음 작업 (우선순위)
-1. **이메일 발신자 변경** - Custom SMTP (Resend) 설정
-2. **레슨프로 매칭 기능**
+1. **연습장 데이터 등록** - Google Places API로 데이터 가져오기
+2. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
 3. **AI 클럽 추천 기능**
+4. **관리자 페이지 보안** - 인증/권한 체크
 
 ### 📋 추후 개발 예정
 - 골프장 가격 비교
-- 연습장 정보/검색
 - AI 기반 매칭 추천
+- Custom SMTP (Resend) 설정
 
 ---
 
@@ -603,11 +636,17 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 10. [x] 조인 알림/채팅 기능
 11. [x] 골프장 검색 기능 (Google Places API)
 12. [x] 이메일 인증 설정 및 템플릿 한글화
+13. [x] SEO 최적화 (robots.ts, sitemap.ts)
+14. [x] 커뮤니티 좋아요/북마크 기능
+15. [x] 랜딩페이지 UI 개선
+16. [x] 레슨프로 매칭 기능
+17. [x] 연습장 기능
 
 ### 📋 진행 예정
-13. [ ] 이메일 발신자 변경 (Custom SMTP - Resend)
-14. [ ] 레슨프로 매칭 기능
-15. [ ] AI 클럽 추천 기능
+18. [ ] 연습장 데이터 등록 (Google Places API)
+19. [ ] 레슨프로 기능 고도화
+20. [ ] AI 클럽 추천 기능
+21. [ ] 관리자 페이지 보안
 
 ---
 
