@@ -1033,3 +1033,7 @@ export function getGuidesByCategory(category: string): Guide[] {
   if (category === 'all') return guides
   return guides.filter((guide) => guide.category === category)
 }
+
+export function getAllGuides(): Guide[] {
+  return guides
+}

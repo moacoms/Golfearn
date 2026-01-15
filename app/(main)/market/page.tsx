@@ -5,6 +5,15 @@ import { formatPrice } from '@/lib/utils'
 import MarketFilters from './MarketFilters'
 import MarketClientWrapper from './MarketClientWrapper'
 
+export const metadata = {
+  title: '중고거래',
+  description: '골프 용품 중고거래 장터. 드라이버, 아이언, 퍼터 등 골프 장비를 합리적인 가격에 구매하세요.',
+  openGraph: {
+    title: '중고거래 | Golfearn',
+    description: '골프 용품 중고거래 장터. 드라이버, 아이언, 퍼터 등 골프 장비를 합리적인 가격에 구매하세요.',
+  },
+}
+
 const categories = [
   { id: 'all', name: '전체' },
   { id: 'driver', name: '드라이버' },

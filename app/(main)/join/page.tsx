@@ -4,6 +4,15 @@ import { getUserLocation } from '@/lib/actions/location'
 import JoinCard from '@/components/join/JoinCard'
 import JoinClientWrapper from './JoinClientWrapper'
 
+export const metadata = {
+  title: '골린이 조인',
+  description: '100타 이상 초보 골퍼끼리 함께하는 조인 매칭. 부담 없이 라운딩 파트너를 찾아보세요.',
+  openGraph: {
+    title: '골린이 조인 | Golfearn',
+    description: '100타 이상 초보 골퍼끼리 함께하는 조인 매칭. 부담 없이 라운딩 파트너를 찾아보세요.',
+  },
+}
+
 // 날짜 범위 계산
 function getDateRange(dateFilter: string) {
   const today = new Date()

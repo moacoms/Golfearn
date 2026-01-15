@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile, getMyPosts, getMyProducts, getMyFavorites } from '@/lib/actions/profile'
 import { getMyJoins } from '@/lib/actions/join'
+import { getBookmarkedPosts } from '@/lib/actions/posts'
 import LogoutButton from './LogoutButton'
 
 export default async function MyPage() {
@@ -13,12 +14,13 @@ export default async function MyPage() {
     redirect('/login')
   }
 
-  const [profile, posts, products, favorites, joins] = await Promise.all([
+  const [profile, posts, products, favorites, joins, bookmarks] = await Promise.all([
     getProfile(),
     getMyPosts(),
     getMyProducts(),
     getMyFavorites(),
     getMyJoins(),
+    getBookmarkedPosts(),
   ])
 
   // 골프 경력 계산
@@ -123,6 +125,17 @@ export default async function MyPage() {
             title="관심 상품"
             description="찜한 상품 목록을 확인합니다"
             count={favorites.length}
+          />
+          <MenuCard
+            href="/mypage/bookmarks"
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            }
+            title="북마크한 게시글"
+            description="북마크한 커뮤니티 게시글을 확인합니다"
+            count={bookmarks.length}
           />
           <MenuCard
             href="/mypage/joins"

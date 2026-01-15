@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getPost, getComments } from '@/lib/actions/posts'
+import { getPost, getComments, getPostUserActions } from '@/lib/actions/posts'
 import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import CommentSection from './CommentSection'
 import PostActions from './PostActions'
+import LikeBookmarkButtons from './LikeBookmarkButtons'
 
 const categories = [
   { id: 'qna', name: 'Q&A' },
@@ -24,9 +25,10 @@ export default async function PostDetailPage({
     notFound()
   }
 
-  const [post, comments] = await Promise.all([
+  const [post, comments, userActions] = await Promise.all([
     getPost(postId),
     getComments(postId),
+    getPostUserActions(postId),
   ])
 
   if (!post) {
@@ -81,6 +83,16 @@ export default async function PostDetailPage({
           <div className="prose max-w-none">
             <div className="whitespace-pre-wrap">{post.content}</div>
           </div>
+
+          {/* 좋아요 / 북마크 버튼 */}
+          <LikeBookmarkButtons
+            postId={postId}
+            initialLikeCount={post.like_count || 0}
+            initialBookmarkCount={post.bookmark_count || 0}
+            initialIsLiked={userActions.isLiked}
+            initialIsBookmarked={userActions.isBookmarked}
+            isLoggedIn={!!user}
+          />
         </article>
 
         {/* 댓글 섹션 */}

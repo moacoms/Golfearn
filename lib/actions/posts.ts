@@ -8,7 +8,10 @@ export type PostWithAuthor = {
   category: string
   title: string
   content: string
+  images?: string[] | null
   view_count: number
+  like_count: number
+  bookmark_count: number
   created_at: string
   updated_at: string
   user_id: string
@@ -18,6 +21,8 @@ export type PostWithAuthor = {
     avatar_url: string | null
   } | null
   comment_count?: number
+  user_liked?: boolean
+  user_bookmarked?: boolean
 }
 
 // 게시글 목록 조회
@@ -259,4 +264,191 @@ export async function deleteComment(commentId: number, postId: number) {
 
   revalidatePath(`/community/${postId}`)
   return { success: true }
+}
+
+// 좋아요 토글
+export async function togglePostLike(postId: number): Promise<{
+  error?: string
+  success?: boolean
+  isLiked?: boolean
+}> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: '로그인이 필요합니다.' }
+  }
+
+  // 이미 좋아요 했는지 확인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from('post_likes')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (existing) {
+    // 좋아요 취소
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('post_likes')
+      .delete()
+      .eq('id', existing.id)
+
+    if (error) {
+      return { error: '처리에 실패했습니다.' }
+    }
+
+    revalidatePath(`/community/${postId}`)
+    return { success: true, isLiked: false }
+  } else {
+    // 좋아요 추가
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('post_likes')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+      })
+
+    if (error) {
+      return { error: '처리에 실패했습니다.' }
+    }
+
+    revalidatePath(`/community/${postId}`)
+    return { success: true, isLiked: true }
+  }
+}
+
+// 북마크 토글
+export async function togglePostBookmark(postId: number): Promise<{
+  error?: string
+  success?: boolean
+  isBookmarked?: boolean
+}> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: '로그인이 필요합니다.' }
+  }
+
+  // 이미 북마크 했는지 확인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from('post_bookmarks')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (existing) {
+    // 북마크 취소
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('post_bookmarks')
+      .delete()
+      .eq('id', existing.id)
+
+    if (error) {
+      return { error: '처리에 실패했습니다.' }
+    }
+
+    revalidatePath(`/community/${postId}`)
+    revalidatePath('/mypage/bookmarks')
+    return { success: true, isBookmarked: false }
+  } else {
+    // 북마크 추가
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('post_bookmarks')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+      })
+
+    if (error) {
+      return { error: '처리에 실패했습니다.' }
+    }
+
+    revalidatePath(`/community/${postId}`)
+    revalidatePath('/mypage/bookmarks')
+    return { success: true, isBookmarked: true }
+  }
+}
+
+// 사용자의 좋아요/북마크 상태 확인
+export async function getPostUserActions(postId: number): Promise<{
+  isLiked: boolean
+  isBookmarked: boolean
+}> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { isLiked: false, isBookmarked: false }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [likeResult, bookmarkResult] = await Promise.all([
+    (supabase as any)
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single(),
+    (supabase as any)
+      .from('post_bookmarks')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single(),
+  ])
+
+  return {
+    isLiked: !!likeResult.data,
+    isBookmarked: !!bookmarkResult.data,
+  }
+}
+
+// 북마크한 게시글 목록
+export async function getBookmarkedPosts(): Promise<PostWithAuthor[]> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return []
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('post_bookmarks')
+    .select(`
+      post_id,
+      posts (
+        *,
+        profiles (
+          username,
+          full_name,
+          avatar_url
+        )
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching bookmarked posts:', error)
+    return []
+  }
+
+  return data.map((item: { posts: PostWithAuthor }) => ({
+    ...item.posts,
+    user_bookmarked: true,
+  }))
 }
