@@ -412,6 +412,88 @@ export async function getMyLessonPro(): Promise<LessonPro | null> {
   return data as LessonPro
 }
 
+// Google Places에서 레슨프로 가져오기 (관리자용)
+export interface ImportLessonProData {
+  name: string
+  address: string
+  placeId: string
+  lat: number
+  lng: number
+  rating: number
+  reviewCount: number
+  phone?: string
+  photoUrl?: string
+}
+
+export async function importLessonProFromPlace(
+  data: ImportLessonProData
+): Promise<{ error?: string; success?: boolean; proId?: number }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: '로그인이 필요합니다.' }
+  }
+
+  // 이미 등록된 place_id인지 확인 (중복 방지)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingPro } = await (supabase as any)
+    .from('lesson_pros')
+    .select('id')
+    .eq('google_place_id', data.placeId)
+    .single()
+
+  if (existingPro) {
+    return { error: '이미 등록된 업체입니다.' }
+  }
+
+  // 지역 추출 (주소에서)
+  const regionMatch = data.address.match(/^(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)/)
+  const region = regionMatch ? regionMatch[1] : null
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: newPro, error } = await (supabase as any)
+    .from('lesson_pros')
+    .insert({
+      user_id: null, // 외부 데이터는 user_id 없음
+      name: data.name,
+      introduction: `${data.address}에 위치한 골프 레슨 전문 업체입니다.`,
+      experience_years: null,
+      specialties: ['beginner'], // 기본값
+      certifications: null,
+      regions: region ? [region] : null,
+      lesson_types: ['individual', 'group'], // 기본값
+      price_individual: null,
+      price_group: null,
+      available_times: null,
+      profile_image: data.photoUrl || null,
+      gallery_images: null,
+      contact_phone: data.phone || null,
+      contact_kakao: null,
+      instagram: null,
+      youtube: null,
+      location_lat: data.lat,
+      location_lng: data.lng,
+      location_address: data.address,
+      rating: data.rating || 0,
+      review_count: data.reviewCount || 0,
+      is_verified: false,
+      is_active: true,
+      google_place_id: data.placeId, // 중복 방지용
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Error importing lesson pro:', error)
+    return { error: '레슨프로 등록에 실패했습니다.' }
+  }
+
+  revalidatePath('/lesson-pro')
+  return { success: true, proId: newPro.id }
+}
+
 // 레슨프로 프로필 이미지 업로드
 export async function uploadLessonProImage(
   formData: FormData
