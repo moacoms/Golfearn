@@ -68,7 +68,7 @@ export async function getMyPointWallet(): Promise<{ data: PointWallet | null; er
       return { data: null, error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase.from('point_wallets').select('*').eq('user_id', user.id).single()
+    const { data, error } = await (supabase.from('point_wallets') as any).select('*').eq('user_id', user.id).single()
 
     if (error) {
       console.error('Error fetching point wallet:', error)
@@ -99,8 +99,7 @@ export async function getPointTransactions(
       return { data: [], error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase
-      .from('point_transactions')
+    const { data, error } = await (supabase.from('point_transactions') as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -138,7 +137,7 @@ export async function earnPoints(
       return { success: false, error: '로그인이 필요합니다.' }
     }
 
-    const { error } = await supabase.from('point_transactions').insert({
+    const { error } = await (supabase.from('point_transactions') as any).insert({
       user_id: user.id,
       type: 'earn',
       amount,
@@ -182,13 +181,13 @@ export async function spendPoints(
     }
 
     // 잔액 확인
-    const { data: wallet } = await supabase.from('point_wallets').select('balance').eq('user_id', user.id).single()
+    const { data: wallet } = await (supabase.from('point_wallets') as any).select('balance').eq('user_id', user.id).single()
 
     if (!wallet || wallet.balance < amount) {
       return { success: false, error: '포인트가 부족합니다.' }
     }
 
-    const { error } = await supabase.from('point_transactions').insert({
+    const { error } = await (supabase.from('point_transactions') as any).insert({
       user_id: user.id,
       type: 'spend',
       amount,
@@ -225,7 +224,7 @@ export async function getMyExperience(): Promise<{ data: UserExperience | null; 
       return { data: null, error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase.from('user_experience').select('*').eq('user_id', user.id).single()
+    const { data, error } = await (supabase.from('user_experience') as any).select('*').eq('user_id', user.id).single()
 
     if (error) {
       console.error('Error fetching user experience:', error)
@@ -260,7 +259,7 @@ export async function earnExperience(
     }
 
     // 경험치 거래 내역 추가
-    const { error: txError } = await supabase.from('xp_transactions').insert({
+    const { error: txError } = await (supabase.from('xp_transactions') as any).insert({
       user_id: user.id,
       amount,
       category,
@@ -275,11 +274,10 @@ export async function earnExperience(
     }
 
     // 경험치 업데이트
-    const { data: currentXp } = await supabase.from('user_experience').select('xp, total_xp').eq('user_id', user.id).single()
+    const { data: currentXp } = await (supabase.from('user_experience') as any).select('xp, total_xp').eq('user_id', user.id).single()
 
     if (currentXp) {
-      await supabase
-        .from('user_experience')
+      await (supabase.from('user_experience') as any)
         .update({
           xp: currentXp.xp + amount,
           total_xp: currentXp.total_xp + amount,
@@ -303,7 +301,7 @@ export async function getAllBadges(): Promise<{ data: Badge[]; error: string | n
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from('badges').select('*').order('requirement_value', { ascending: true })
+    const { data, error } = await (supabase.from('badges') as any).select('*').order('requirement_value', { ascending: true })
 
     if (error) {
       console.error('Error fetching badges:', error)
@@ -331,8 +329,7 @@ export async function getMyBadges(): Promise<{ data: UserBadge[]; error: string 
       return { data: [], error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase
-      .from('user_badges')
+    const { data, error } = await (supabase.from('user_badges') as any)
       .select('*, badge:badges(*)')
       .eq('user_id', user.id)
       .order('earned_at', { ascending: false })
@@ -364,13 +361,13 @@ export async function earnBadge(badgeId: string): Promise<{ success: boolean; er
     }
 
     // 이미 획득한 뱃지인지 확인
-    const { data: existing } = await supabase.from('user_badges').select('*').eq('user_id', user.id).eq('badge_id', badgeId).single()
+    const { data: existing } = await (supabase.from('user_badges') as any).select('*').eq('user_id', user.id).eq('badge_id', badgeId).single()
 
     if (existing) {
       return { success: false, error: '이미 획득한 뱃지입니다.' }
     }
 
-    const { error } = await supabase.from('user_badges').insert({
+    const { error } = await (supabase.from('user_badges') as any).insert({
       user_id: user.id,
       badge_id: badgeId,
     })
@@ -395,7 +392,7 @@ export async function getXpLeaderboard(limit: number = 10): Promise<{ data: any[
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from('xp_leaderboard').select('*').limit(limit)
+    const { data, error } = await (supabase.from('xp_leaderboard') as any).select('*').limit(limit)
 
     if (error) {
       console.error('Error fetching XP leaderboard:', error)
@@ -426,7 +423,7 @@ export async function checkIn(): Promise<{ success: boolean; consecutiveDays: nu
     const today = new Date().toISOString().split('T')[0]
 
     // 오늘 이미 출석했는지 확인
-    const { data: todayCheckIn } = await supabase.from('daily_check_ins').select('*').eq('user_id', user.id).eq('check_in_date', today).single()
+    const { data: todayCheckIn } = await (supabase.from('daily_check_ins') as any).select('*').eq('user_id', user.id).eq('check_in_date', today).single()
 
     if (todayCheckIn) {
       return { success: false, consecutiveDays: todayCheckIn.consecutive_days, points: 0, error: '오늘 이미 출석했습니다.' }
@@ -437,8 +434,7 @@ export async function checkIn(): Promise<{ success: boolean; consecutiveDays: nu
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayDate = yesterday.toISOString().split('T')[0]
 
-    const { data: yesterdayCheckIn } = await supabase
-      .from('daily_check_ins')
+    const { data: yesterdayCheckIn } = await (supabase.from('daily_check_ins') as any)
       .select('*')
       .eq('user_id', user.id)
       .eq('check_in_date', yesterdayDate)
@@ -452,7 +448,7 @@ export async function checkIn(): Promise<{ success: boolean; consecutiveDays: nu
     else if (consecutiveDays >= 3) rewardPoints = 200
 
     // 출석 기록 추가
-    const { error: checkInError } = await supabase.from('daily_check_ins').insert({
+    const { error: checkInError } = await (supabase.from('daily_check_ins') as any).insert({
       user_id: user.id,
       check_in_date: today,
       consecutive_days: consecutiveDays,
@@ -472,7 +468,7 @@ export async function checkIn(): Promise<{ success: boolean; consecutiveDays: nu
 
     // 7일 연속 출석 뱃지 체크
     if (consecutiveDays === 7) {
-      const { data: badge } = await supabase.from('badges').select('id').eq('name', '7일 연속 출석').single()
+      const { data: badge } = await (supabase.from('badges') as any).select('id').eq('name', '7일 연속 출석').single()
 
       if (badge) {
         await earnBadge(badge.id)
@@ -503,7 +499,7 @@ export async function getTodayCheckIn(): Promise<{ checked: boolean; consecutive
 
     const today = new Date().toISOString().split('T')[0]
 
-    const { data, error } = await supabase.from('daily_check_ins').select('*').eq('user_id', user.id).eq('check_in_date', today).single()
+    const { data, error } = await (supabase.from('daily_check_ins') as any).select('*').eq('user_id', user.id).eq('check_in_date', today).single()
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching check-in:', error)

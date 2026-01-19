@@ -9,10 +9,54 @@
 - **목적**: 30대 후반~50대 골프 입문자(골린이)가 겪는 정보 비대칭, 비용 부담, 심리적 장벽을 해소하는 올인원 플랫폼
 - **창업자 배경**: 42살에 골프 시작한 실제 경험 보유 → 진정성 있는 콘텐츠 가능
 
-### 도메인 (확인 필요)
-- golfearn.com
-- golfearn.kr
-- golfearn.co.kr
+### 도메인
+- **메인**: www.golfearn.com (운영 중)
+
+---
+
+## 비전 & 목표
+
+### 최종 비전
+> **한국 골프 산업을 반전시키고, 부의 자유를 얻어 매주 라운딩하는 삶**
+
+### 왜 Golfearn인가?
+- 42살에 골프 시작한 실제 경험 → 골린이 고충을 진짜로 이해
+- 골린이 전용 플랫폼 (기존 경쟁사에 없음)
+- 입문자 여정 전체 커버 (장비 → 레슨 → 연습 → 조인)
+
+### 성장 로드맵
+
+#### Phase 1: 초기 유저 확보 (현재)
+- [ ] 초기 유저 100명 확보
+  - 골프 커뮤니티 홍보 (골프존 카페, 네이버 카페)
+  - 지인 네트워크 활용
+  - 추천인 시스템으로 바이럴
+- [ ] 실제 사용 피드백 수집 및 빠른 개선
+- [ ] 진정성 있는 콘텐츠 작성 ("42살에 골프 시작한 이유" 등)
+
+#### Phase 2: 서비스 안정화
+- [ ] MAU 1,000명 달성
+- [ ] 조인 매칭 월 100건 이상
+- [ ] 중고거래 월 50건 이상
+- [ ] 레슨프로 등록 50명 이상
+
+#### Phase 3: 수익화
+- [ ] 중고거래 수수료 도입
+- [ ] 프리미엄 멤버십 런칭 (월 9,900원)
+- [ ] 레슨/피팅 예약 수수료
+- [ ] 골프장/브랜드 광고 제휴
+
+#### Phase 4: 확장
+- [ ] 앱 출시 (React Native)
+- [ ] AI 클럽 추천 기능
+- [ ] 골프장 예약 연동
+- [ ] 월 매출 1,000만원 달성
+
+### 현재 보유 자산
+- ✅ 조인 매칭, 중고거래, 레슨프로 연결 기능 완성
+- ✅ 포인트/추천인 시스템으로 자연스러운 유저 확보 구조
+- ✅ 15개 연습장 데이터
+- ✅ 프로덕션 배포 완료 (www.golfearn.com)
 
 ---
 
@@ -92,118 +136,60 @@
 
 ## 데이터베이스 스키마 (Supabase)
 
-### users (auth.users 확장)
-```sql
-create table public.profiles (
-  id uuid references auth.users primary key,
-  username text unique,
-  full_name text,
-  avatar_url text,
-  height integer,           -- 키 (cm)
-  golf_started_at date,     -- 골프 시작일
-  average_score integer,    -- 평균 스코어
-  location text,            -- 지역
-  created_at timestamptz default now()
-);
-```
+> 상세 SQL은 `supabase/migrations/` 폴더 참고
 
-### posts (게시판)
-```sql
-create table public.posts (
-  id bigint primary key generated always as identity,
-  user_id uuid references public.profiles,
-  category text,            -- 'qna', 'free', 'review'
-  title text not null,
-  content text not null,
-  view_count integer default 0,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-```
+### 핵심 테이블
 
-### comments (댓글)
-```sql
-create table public.comments (
-  id bigint primary key generated always as identity,
-  post_id bigint references public.posts,
-  user_id uuid references public.profiles,
-  content text not null,
-  created_at timestamptz default now()
-);
-```
+| 테이블 | 설명 |
+|--------|------|
+| `profiles` | 사용자 프로필 (auth.users 확장) |
+| `posts` | 커뮤니티 게시글 |
+| `comments` | 댓글 |
+| `products` | 중고거래 상품 |
+| `messages` | 채팅 메시지 |
+| `favorites` | 찜 목록 |
 
-### products (중고거래)
-```sql
-create table public.products (
-  id bigint primary key generated always as identity,
-  user_id uuid references public.profiles,
-  category text,            -- 'driver', 'iron', 'putter', 'wedge', 'set', 'etc'
-  title text not null,
-  description text,
-  price integer not null,
-  condition text,           -- 'S', 'A', 'B', 'C'
-  images text[],
-  status text default 'selling', -- 'selling', 'reserved', 'sold'
-  location text,
-  created_at timestamptz default now()
-);
-```
+### 조인 매칭
 
-### messages (채팅)
-```sql
-create table public.messages (
-  id bigint primary key generated always as identity,
-  product_id bigint references public.products,
-  sender_id uuid references public.profiles,
-  receiver_id uuid references public.profiles,
-  content text not null,
-  created_at timestamptz default now()
-);
-```
+| 테이블 | 설명 |
+|--------|------|
+| `join_posts` | 조인 모집글 |
+| `join_participants` | 조인 참가자 |
+| `join_messages` | 조인 채팅 |
 
-### join_posts (조인 매칭)
-```sql
-create table public.join_posts (
-  id bigint primary key generated always as identity,
-  user_id uuid references public.profiles not null,
-  title text not null,
-  description text,
-  round_date date not null,
-  round_time time not null,
-  golf_course_name text not null,
-  golf_course_address text,
-  total_slots int not null default 4,
-  current_slots int not null default 1,
-  min_score int,
-  max_score int,
-  green_fee int,
-  cart_fee int,
-  caddie_fee int,
-  location_dong text,
-  location_gu text,
-  location_city text,
-  location_lat double precision,
-  location_lng double precision,
-  status text not null default 'recruiting',
-  view_count int not null default 0,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-```
+### 레슨/연습장
 
-### join_participants (조인 참가)
-```sql
-create table public.join_participants (
-  id bigint primary key generated always as identity,
-  join_post_id bigint references public.join_posts on delete cascade not null,
-  user_id uuid references public.profiles not null,
-  message text,
-  status text not null default 'pending',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique(join_post_id, user_id)
-);
-```
+| 테이블 | 설명 |
+|--------|------|
+| `lesson_pros` | 레슨프로 정보 |
+| `lesson_pro_reviews` | 레슨프로 리뷰 |
+| `lesson_inquiries` | 레슨 문의 |
+| `practice_ranges` | 연습장 정보 |
+| `golf_course_reviews` | 골프장 리뷰 |
+
+### BM/포인트 시스템
+
+| 테이블 | 설명 |
+|--------|------|
+| `referral_codes` | 추천 코드 (GOLF-XXXXXX) |
+| `referrals` | 추천 관계 기록 |
+| `point_wallets` | 포인트 지갑 |
+| `point_transactions` | 포인트 거래 내역 |
+| `user_experience` | 경험치/레벨 |
+| `xp_transactions` | 경험치 거래 내역 |
+| `badges` | 뱃지 마스터 |
+| `user_badges` | 사용자 획득 뱃지 |
+| `daily_check_ins` | 출석 체크 |
+
+### 이벤트/프로모션
+
+| 테이블 | 설명 |
+|--------|------|
+| `events` | 이벤트 |
+| `event_participants` | 이벤트 참가자 |
+| `promo_codes` | 프로모션 코드 |
+| `promo_code_usage` | 프로모션 코드 사용 내역 |
+| `premium_subscriptions` | 프리미엄 멤버십 |
 
 ---
 
@@ -453,9 +439,52 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2025-01-15 업데이트)
+## 개발 진행 현황 (2026-01-16 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 1월 4주차 (BM/포인트 시스템) - 2026-01-16
+
+24. **BM & 프로모션 시스템 구현**
+    - `claude/bm-promotion-strategy-d9lIM` 브랜치 병합
+    - 추천인 시스템, 포인트 시스템, 이벤트 시스템 통합
+    - 마이그레이션 파일: `supabase/migrations/20260115_referral_points_events.sql`
+
+25. **포인트/리워드 시스템**
+    - 회원가입 시 3,000P 자동 지급
+    - 출석 체크 기능 (연속 출석 보너스: 3일 200P, 7일 500P)
+    - 포인트 거래 내역 관리
+    - 마이페이지 포인트 탭: `/mypage/points`
+
+26. **추천인 시스템**
+    - 회원가입 시 추천 코드 자동 생성 (GOLF-XXXXXX)
+    - 추천인 보상: 5,000P
+    - 피추천인 보상: 3,000P 추가
+    - 추천 통계 및 리더보드
+
+27. **경험치/레벨 시스템**
+    - 활동별 경험치 획득
+    - 레벨업 자동 체크 (Lv1~Lv6)
+    - XP 리더보드
+
+28. **뱃지 시스템**
+    - 10개 초기 뱃지 등록
+    - 조건 달성 시 자동 부여
+    - 뱃지: 첫 라운딩 완주, 7일 연속 출석, 댓글왕, 조인 달인 등
+
+29. **이벤트/프로모션 시스템**
+    - 이벤트 생성/참가 기능
+    - 프로모션 코드 발급/사용
+    - 프리미엄 멤버십 테이블
+
+30. **연습장 데이터 임포트**
+    - 전국 15개 연습장 샘플 데이터 등록
+    - 지역: 서울(3), 경기(3), 인천(1), 부산(2), 대구(1), 대전(1), 광주(1), 제주(2), 강원(1)
+    - 스크립트: `scripts/import-practice-ranges.js`
+
+31. **빌드 에러 수정**
+    - Button 컴포넌트 import 수정 (named → default export)
+    - Supabase 테이블 타입 에러 수정 (`as any` 캐스팅)
 
 #### 1월 1주차 (프로젝트 초기화)
 1. **프로젝트 초기화**
@@ -591,7 +620,7 @@ npx supabase gen types typescript --local > types/database.ts
     - DB 테이블: `practice_ranges`
 
 ### 🔜 다음 작업 (우선순위)
-1. **연습장 데이터 등록** - Google Places API로 데이터 가져오기
+1. **TypeScript 타입 생성** - `npx supabase gen types typescript` 실행 후 타입 적용
 2. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
 3. **AI 클럽 추천 기능**
 4. **관리자 페이지 보안** - 인증/권한 체크
@@ -600,6 +629,7 @@ npx supabase gen types typescript --local > types/database.ts
 - 골프장 가격 비교
 - AI 기반 매칭 추천
 - Custom SMTP (Resend) 설정
+- 프리미엄 멤버십 결제 연동
 
 ---
 
@@ -641,12 +671,15 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 15. [x] 랜딩페이지 UI 개선
 16. [x] 레슨프로 매칭 기능
 17. [x] 연습장 기능
+18. [x] BM/포인트 시스템 (추천인, 포인트, 경험치, 뱃지, 이벤트)
+19. [x] 연습장 샘플 데이터 등록 (15개)
 
 ### 📋 진행 예정
-18. [ ] 연습장 데이터 등록 (Google Places API)
-19. [ ] 레슨프로 기능 고도화
-20. [ ] AI 클럽 추천 기능
-21. [ ] 관리자 페이지 보안
+20. [ ] TypeScript 타입 생성 (Supabase)
+21. [ ] 레슨프로 기능 고도화
+22. [ ] AI 클럽 추천 기능
+23. [ ] 관리자 페이지 보안
+24. [ ] 프리미엄 멤버십 결제 연동
 
 ---
 

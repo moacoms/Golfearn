@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { checkIn, getTodayCheckIn } from '@/lib/actions/points'
-import { Button } from '@/components/ui/Button'
+import Button from '@/components/ui/Button'
 
 export function CheckInButton() {
   const [loading, setLoading] = useState(false)

@@ -42,7 +42,7 @@ export async function getMyReferralCode(): Promise<{ data: ReferralCode | null; 
       return { data: null, error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase.from('referral_codes').select('*').eq('user_id', user.id).single()
+    const { data, error } = await (supabase.from('referral_codes') as any).select('*').eq('user_id', user.id).single()
 
     if (error) {
       console.error('Error fetching referral code:', error)
@@ -71,11 +71,10 @@ export async function applyReferralCode(referralCode: string): Promise<{ success
     }
 
     // 추천 코드 확인
-    const { data: referralCodeData, error: codeError } = await supabase
-      .from('referral_codes')
+    const { data: referralCodeData, error: codeError } = await (supabase.from('referral_codes') as any)
       .select('*')
       .eq('code', referralCode.toUpperCase())
-      .single()
+      .single() as { data: ReferralCode | null; error: any }
 
     if (codeError || !referralCodeData) {
       return { success: false, error: '유효하지 않은 추천 코드입니다.' }
@@ -87,14 +86,14 @@ export async function applyReferralCode(referralCode: string): Promise<{ success
     }
 
     // 이미 추천받은 사용자인지 확인
-    const { data: existingReferral } = await supabase.from('referrals').select('*').eq('referred_id', user.id).single()
+    const { data: existingReferral } = await (supabase.from('referrals') as any).select('*').eq('referred_id', user.id).single()
 
     if (existingReferral) {
       return { success: false, error: '이미 추천을 받으신 계정입니다.' }
     }
 
     // 추천 관계 생성
-    const { error: insertError } = await supabase.from('referrals').insert({
+    const { error: insertError } = await (supabase.from('referrals') as any).insert({
       referrer_id: referralCodeData.user_id,
       referred_id: user.id,
       referral_code: referralCode.toUpperCase(),
@@ -107,13 +106,12 @@ export async function applyReferralCode(referralCode: string): Promise<{ success
     }
 
     // 추천 코드 사용 횟수 증가
-    await supabase
-      .from('referral_codes')
+    await (supabase.from('referral_codes') as any)
       .update({ uses_count: referralCodeData.uses_count + 1 })
       .eq('id', referralCodeData.id)
 
     // 추천인에게 포인트 지급 (5,000P)
-    await supabase.from('point_transactions').insert({
+    await (supabase.from('point_transactions') as any).insert({
       user_id: referralCodeData.user_id,
       type: 'earn',
       amount: 5000,
@@ -124,7 +122,7 @@ export async function applyReferralCode(referralCode: string): Promise<{ success
     })
 
     // 신규 가입자에게 추가 포인트 지급 (기본 3,000P + 추천 3,000P)
-    await supabase.from('point_transactions').insert({
+    await (supabase.from('point_transactions') as any).insert({
       user_id: user.id,
       type: 'earn',
       amount: 3000,
@@ -135,7 +133,7 @@ export async function applyReferralCode(referralCode: string): Promise<{ success
     })
 
     // 보상 지급 완료 표시
-    await supabase.from('referrals').update({ reward_given: true }).eq('referred_id', user.id)
+    await (supabase.from('referrals') as any).update({ reward_given: true }).eq('referred_id', user.id)
 
     revalidatePath('/')
     return { success: true, error: null }
@@ -159,12 +157,12 @@ export async function getMyReferralStats(): Promise<{ data: ReferralStats | null
       return { data: null, error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase.from('referral_stats').select('*').eq('referrer_id', user.id).single()
+    const { data, error } = await (supabase.from('referral_stats') as any).select('*').eq('referrer_id', user.id).single()
 
     if (error) {
       // 아직 추천한 사람이 없는 경우
       if (error.code === 'PGRST116') {
-        const { data: codeData } = await supabase.from('referral_codes').select('code').eq('user_id', user.id).single()
+        const { data: codeData } = await (supabase.from('referral_codes') as any).select('code').eq('user_id', user.id).single()
 
         return {
           data: {
@@ -203,7 +201,7 @@ export async function getMyReferrals(): Promise<{ data: Referral[]; error: strin
       return { data: [], error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase.from('referrals').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false })
+    const { data, error } = await (supabase.from('referrals') as any).select('*').eq('referrer_id', user.id).order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching referrals:', error)
@@ -224,7 +222,7 @@ export async function getReferralLeaderboard(limit: number = 10): Promise<{ data
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from('referral_leaderboard').select('*').limit(limit)
+    const { data, error } = await (supabase.from('referral_leaderboard') as any).select('*').limit(limit)
 
     if (error) {
       console.error('Error fetching referral leaderboard:', error)

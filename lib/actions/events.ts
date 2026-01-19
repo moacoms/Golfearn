@@ -54,7 +54,7 @@ export async function getActiveEvents(): Promise<{ data: Event[]; error: string 
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from('events').select('*').eq('status', 'active').order('start_date', { ascending: false })
+    const { data, error } = await (supabase.from('events') as any).select('*').eq('status', 'active').order('start_date', { ascending: false })
 
     if (error) {
       console.error('Error fetching active events:', error)
@@ -75,7 +75,7 @@ export async function getEvent(eventId: string): Promise<{ data: Event | null; e
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from('events').select('*').eq('id', eventId).single()
+    const { data, error } = await (supabase.from('events') as any).select('*').eq('id', eventId).single()
 
     if (error) {
       console.error('Error fetching event:', error)
@@ -107,7 +107,7 @@ export async function participateInEvent(
     }
 
     // 이벤트 정보 확인
-    const { data: event, error: eventError } = await supabase.from('events').select('*').eq('id', eventId).single()
+    const { data: event, error: eventError } = await (supabase.from('events') as any).select('*').eq('id', eventId).single() as { data: Event | null; error: any }
 
     if (eventError || !event) {
       return { success: false, error: '이벤트를 찾을 수 없습니다.' }
@@ -123,14 +123,14 @@ export async function participateInEvent(
     }
 
     // 이미 참가했는지 확인
-    const { data: existing } = await supabase.from('event_participants').select('*').eq('event_id', eventId).eq('user_id', user.id).single()
+    const { data: existing } = await (supabase.from('event_participants') as any).select('*').eq('event_id', eventId).eq('user_id', user.id).single()
 
     if (existing) {
       return { success: false, error: '이미 참가한 이벤트입니다.' }
     }
 
     // 참가 신청
-    const { error: participateError } = await supabase.from('event_participants').insert({
+    const { error: participateError } = await (supabase.from('event_participants') as any).insert({
       event_id: eventId,
       user_id: user.id,
       submission_data: submissionData || null,
@@ -143,14 +143,13 @@ export async function participateInEvent(
     }
 
     // 현재 참가자 수 증가
-    await supabase
-      .from('events')
+    await (supabase.from('events') as any)
       .update({ current_participants: event.current_participants + 1 })
       .eq('id', eventId)
 
     // 참가 보상 (포인트)
     if (event.reward_type === 'points' && event.reward_value?.signup_points) {
-      await supabase.from('point_transactions').insert({
+      await (supabase.from('point_transactions') as any).insert({
         user_id: user.id,
         type: 'earn',
         amount: event.reward_value.signup_points,
@@ -183,8 +182,7 @@ export async function getMyEventParticipations(): Promise<{ data: (EventParticip
       return { data: [], error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase
-      .from('event_participants')
+    const { data, error } = await (supabase.from('event_participants') as any)
       .select('*, event:events(*)')
       .eq('user_id', user.id)
       .order('participated_at', { ascending: false })
@@ -216,12 +214,11 @@ export async function applyPromoCode(code: string): Promise<{ success: boolean; 
     }
 
     // 프로모션 코드 확인
-    const { data: promoCode, error: codeError } = await supabase
-      .from('promo_codes')
+    const { data: promoCode, error: codeError } = await (supabase.from('promo_codes') as any)
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
-      .single()
+      .single() as { data: PromoCode | null; error: any }
 
     if (codeError || !promoCode) {
       return { success: false, discount: 0, error: '유효하지 않은 프로모션 코드입니다.' }
@@ -242,8 +239,7 @@ export async function applyPromoCode(code: string): Promise<{ success: boolean; 
     }
 
     // 이미 사용했는지 확인 (사용자별)
-    const { data: existingUsage } = await supabase
-      .from('promo_code_usage')
+    const { data: existingUsage } = await (supabase.from('promo_code_usage') as any)
       .select('*')
       .eq('promo_code_id', promoCode.id)
       .eq('user_id', user.id)
@@ -280,7 +276,7 @@ export async function recordPromoCodeUsage(
     }
 
     // 사용 기록 추가
-    const { error: usageError } = await supabase.from('promo_code_usage').insert({
+    const { error: usageError } = await (supabase.from('promo_code_usage') as any).insert({
       promo_code_id: promoCodeId,
       user_id: user.id,
       order_type: orderType,
@@ -294,11 +290,10 @@ export async function recordPromoCodeUsage(
     }
 
     // 사용 횟수 증가
-    const { data: promoCode } = await supabase.from('promo_codes').select('usage_count').eq('id', promoCodeId).single()
+    const { data: promoCode } = await (supabase.from('promo_codes') as any).select('usage_count').eq('id', promoCodeId).single() as { data: { usage_count: number } | null }
 
     if (promoCode) {
-      await supabase
-        .from('promo_codes')
+      await (supabase.from('promo_codes') as any)
         .update({ usage_count: promoCode.usage_count + 1 })
         .eq('id', promoCodeId)
     }
@@ -325,8 +320,7 @@ export async function createEvent(eventData: Partial<Event>): Promise<{ success:
       return { success: false, eventId: null, error: '로그인이 필요합니다.' }
     }
 
-    const { data, error } = await supabase
-      .from('events')
+    const { data, error } = await (supabase.from('events') as any)
       .insert({
         ...eventData,
         created_by: user.id,
