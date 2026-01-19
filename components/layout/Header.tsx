@@ -51,12 +51,12 @@ export default function Header() {
 
   const navItems = [
     { href: '/guide', label: '입문 가이드' },
-    { href: '/community', label: '커뮤니티' },
+    { href: '/club-catalog', label: '클럽 카탈로그' },
+    { href: '/club-recommend', label: 'AI 추천' },
     { href: '/market', label: '중고거래' },
-    { href: '/golf-courses', label: '골프장' },
-    { href: '/practice-range', label: '연습장' },
-    { href: '/lesson-pro', label: '레슨프로' },
+    { href: '/community', label: '커뮤니티' },
     { href: '/join', label: '조인' },
+    { href: '/lesson-pro', label: '레슨프로' },
   ]
 
   return (
