@@ -1,0 +1,356 @@
+{
+  "name": "Golfearn 주간 콘텐츠 생성",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "매주 월요일 9시",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 Golfearn 콘텐츠 기획자입니다.\\n\\n이번 주 골린이(35-55세 골프 입문자)를 위한 콘텐츠 주제 1개를 선정해주세요.\\n\\n선정 기준:\\n1. 골린이가 가장 궁금해하는 것\\n2. 계절/시기에 맞는 주제\\n3. Golfearn 서비스(조인매칭, 중고거래, 레슨프로)와 연결 가능\\n\\n응답 형식:\\n- 주제: [주제명]\\n- 이유: [선정 이유]\\n- 핵심 키워드: [3개]\\n- 공감 포인트: [골린이가 공감할 상황]\"\n    }\n  ]\n}"
+      },
+      "id": "select-topic",
+      "name": "주제 선정 (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst content = response.content[0].text;\n\n// 주제 파싱\nconst topicMatch = content.match(/주제:\\s*(.+)/);\nconst topic = topicMatch ? topicMatch[1].trim() : '연습장 처음 가는 법';\n\nconst today = new Date().toISOString().split('T')[0].replace(/-/g, '');\n\nreturn [{\n  json: {\n    topic: topic,\n    date: today,\n    fullResponse: content\n  }\n}];"
+      },
+      "id": "parse-topic",
+      "name": "주제 파싱",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 8192,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 Golfearn(골프런) 콘텐츠 마케팅 팀의 기획 총괄입니다.\\n\\n**Golfearn 핵심 슬로건**: \\\"늦게 시작해도 괜찮아, 함께라면\\\"\\n**타겟**: 35~55세 골프 입문자 (골린이)\\n\\n다음 주제로 콘텐츠 브리프를 작성해주세요:\\n\\n주제: {{ $json.topic }}\\n\\n브리프에 포함할 내용:\\n1. 핵심 메시지 (메인 주제 한 줄, 핵심 포인트 5개)\\n2. 공감 포인트 (골린이가 \\\"나도!\\\" 할 상황 3개)\\n3. 타겟 분석 (이 콘텐츠가 도움 될 골린이, 해결되는 고민)\\n4. Golfearn 서비스 연결 (조인매칭, 중고거래, 레슨프로)\\n5. 플랫폼별 지침 (YouTube, Instagram, 블로그, X스레드, 카페)\\n\\n마크다운 형식으로 작성해주세요.\"\n    }\n  ]\n}"
+      },
+      "id": "create-brief",
+      "name": "브리프 생성 (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst brief = response.content[0].text;\nconst topic = $('parse-topic').first().json.topic;\nconst date = $('parse-topic').first().json.date;\n\nreturn [{\n  json: {\n    topic: topic,\n    date: date,\n    brief: brief\n  }\n}];"
+      },
+      "id": "parse-brief",
+      "name": "브리프 파싱",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 8192,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 Golfearn 블로그 콘텐츠 작성자입니다.\\n\\n다음 브리프를 바탕으로 네이버/티스토리 블로그용 SEO 최적화 글을 작성해주세요.\\n\\n---\\n브리프:\\n{{ $json.brief }}\\n---\\n\\n요구사항:\\n1. 2,000-4,000자 분량\\n2. SEO 키워드를 제목과 소제목에 포함\\n3. 목차 구조 명확\\n4. \\\"요\\\"체 사용\\n5. AI틱한 표현 금지 (\\\"혁신적인\\\", \\\"결론적으로\\\" 등)\\n6. 마지막에 Golfearn CTA 자연스럽게\\n\\n마크다운 형식으로 작성해주세요.\"\n    }\n  ]\n}"
+      },
+      "id": "blog-writer",
+      "name": "블로그 글 생성",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, -150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 Golfearn X(트위터) 콘텐츠 작성자입니다.\\n\\n다음 브리프를 바탕으로 X 스레드 10개를 작성해주세요.\\n\\n---\\n브리프:\\n{{ $json.brief }}\\n---\\n\\n요구사항:\\n1. 10개 트윗\\n2. 각 트윗 280자 이내\\n3. 첫 트윗은 강력한 훅\\n4. 마지막은 Golfearn CTA\\n5. 이모지 적절히 사용\\n\\n형식:\\n### 1️⃣ (훅)\\n[내용]\\n\\n### 2️⃣\\n[내용]\\n...\\n\\n### 🔟 (CTA)\\n[내용]\"\n    }\n  ]\n}"
+      },
+      "id": "thread-writer",
+      "name": "X 스레드 생성",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"당신은 Golfearn Instagram 콘텐츠 작성자입니다.\\n\\n다음 브리프를 바탕으로 카드뉴스 5-7장을 작성해주세요.\\n\\n---\\n브리프:\\n{{ $json.brief }}\\n---\\n\\n요구사항:\\n1. 5-7장 구성\\n2. 각 슬라이드 텍스트 간결하게\\n3. 마지막 슬라이드는 CTA\\n4. 해시태그 10개\\n\\n형식:\\n## 슬라이드 1 (표지)\\n### 텍스트\\n[내용]\\n### 비주얼\\n[설명]\\n\\n...\"\n    }\n  ]\n}"
+      },
+      "id": "instagram-writer",
+      "name": "인스타 카드뉴스 생성",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 150]
+    },
+    {
+      "parameters": {
+        "jsCode": "const blogResponse = $('blog-writer').first().json;\nconst threadResponse = $('thread-writer').first().json;\nconst instaResponse = $('instagram-writer').first().json;\nconst topic = $('parse-brief').first().json.topic;\nconst date = $('parse-brief').first().json.date;\nconst brief = $('parse-brief').first().json.brief;\n\nreturn [{\n  json: {\n    topic: topic,\n    date: date,\n    brief: brief,\n    blog: blogResponse.content[0].text,\n    xThread: threadResponse.content[0].text,\n    instagram: instaResponse.content[0].text\n  }\n}];"
+      },
+      "id": "merge-content",
+      "name": "콘텐츠 병합",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 0]
+    },
+    {
+      "parameters": {
+        "channel": "#marketing",
+        "text": "=📢 *이번 주 Golfearn 콘텐츠가 생성되었습니다!*\n\n📌 *주제*: {{ $json.topic }}\n📅 *날짜*: {{ $json.date }}\n\n✅ 생성된 콘텐츠:\n- 블로그 글\n- X 스레드 (10개)\n- 인스타 카드뉴스\n\n👉 검토 후 발행 스케줄을 확인해주세요.",
+        "otherOptions": {}
+      },
+      "id": "slack-notify",
+      "name": "Slack 알림",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1540, 0]
+    }
+  ],
+  "connections": {
+    "trigger": {
+      "main": [
+        [
+          {
+            "node": "select-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "select-topic": {
+      "main": [
+        [
+          {
+            "node": "parse-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse-topic": {
+      "main": [
+        [
+          {
+            "node": "create-brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-brief": {
+      "main": [
+        [
+          {
+            "node": "parse-brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse-brief": {
+      "main": [
+        [
+          {
+            "node": "blog-writer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "thread-writer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "instagram-writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "blog-writer": {
+      "main": [
+        [
+          {
+            "node": "merge-content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "thread-writer": {
+      "main": [
+        [
+          {
+            "node": "merge-content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "instagram-writer": {
+      "main": [
+        [
+          {
+            "node": "merge-content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge-content": {
+      "main": [
+        [
+          {
+            "node": "slack-notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "golfearn",
+      "createdAt": "2026-01-19T00:00:00.000Z",
+      "updatedAt": "2026-01-19T00:00:00.000Z"
+    },
+    {
+      "name": "marketing",
+      "createdAt": "2026-01-19T00:00:00.000Z",
+      "updatedAt": "2026-01-19T00:00:00.000Z"
+    }
+  ]
+}

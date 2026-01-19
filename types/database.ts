@@ -55,6 +55,7 @@ export interface Database {
           location_lat: number | null
           location_lng: number | null
           location_range: number
+          is_admin: boolean
         }
         Insert: {
           id: string
@@ -78,6 +79,7 @@ export interface Database {
           location_lat?: number | null
           location_lng?: number | null
           location_range?: number
+          is_admin?: boolean
         }
         Update: {
           id?: string
@@ -101,6 +103,7 @@ export interface Database {
           location_lat?: number | null
           location_lng?: number | null
           location_range?: number
+          is_admin?: boolean
         }
       }
       posts: {

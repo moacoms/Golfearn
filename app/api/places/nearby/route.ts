@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Google Places Text Search API (더 정확한 골프장 검색)
+    // Google Places Text Search API (컨트리클럽/CC만 검색 - 연습장 제외)
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=골프장+OR+골프클럽+OR+CC+OR+컨트리클럽&location=${lat},${lng}&radius=${radius}&type=golf_course&language=ko&region=kr&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=컨트리클럽+OR+CC+OR+골프클럽+OR+Country+Club&location=${lat},${lng}&radius=${radius}&type=golf_course&language=ko&region=kr&key=${apiKey}`
     )
 
     if (!response.ok) {
@@ -32,21 +32,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [] })
     }
 
-    // 골프장 관련 키워드로 필터링
-    const golfKeywords = ['골프', 'CC', '컨트리', 'Country', 'Golf', '클럽', 'Club', '힐스', 'Hills', '레이크', 'Lake', '파크', 'Park']
+    // 연습장 제외 키워드
+    const excludeKeywords = ['연습장', '드라이빙', 'driving', 'range', '레인지', '인도어', 'indoor', '스크린', 'screen', '아카데미', 'academy', '레슨']
+
+    // CC/컨트리클럽 키워드 (이 중 하나는 포함해야 함)
+    const ccKeywords = ['CC', '컨트리', 'Country', '클럽', 'Club', '힐스', 'Hills', '레이크', 'Lake', '파크', 'Park', '밸리', 'Valley', '필드', 'Field']
 
     const filteredResults = (data.results || []).filter((place: {
       name: string
       types?: string[]
     }) => {
-      // 이름에 골프 관련 키워드가 있는지 확인
-      const hasGolfKeyword = golfKeywords.some(keyword =>
-        place.name.toLowerCase().includes(keyword.toLowerCase())
+      const nameLower = place.name.toLowerCase()
+
+      // 연습장 관련 키워드가 있으면 제외
+      const isExcluded = excludeKeywords.some(keyword =>
+        nameLower.includes(keyword.toLowerCase())
+      )
+      if (isExcluded) return false
+
+      // CC/컨트리클럽 키워드가 있는지 확인
+      const hasCCKeyword = ccKeywords.some(keyword =>
+        nameLower.includes(keyword.toLowerCase())
       )
       // types에 golf_course가 있는지 확인
       const isGolfCourseType = place.types?.includes('golf_course')
 
-      return hasGolfKeyword || isGolfCourseType
+      return hasCCKeyword || isGolfCourseType
     })
 
     // 결과 가공

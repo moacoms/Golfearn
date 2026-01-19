@@ -7,7 +7,9 @@ import { formatDate } from '@/lib/utils'
 type Comment = {
   id: number
   content: string
-  created_at: string
+  created_at: string | null
+  post_id: number
+  updated_at: string | null
   user_id: string
   profiles: {
     username: string | null
@@ -113,7 +115,7 @@ export default function CommentSection({
                     {comment.profiles?.username || comment.profiles?.full_name || '익명'}
                   </span>
                   <span className="text-muted">·</span>
-                  <span className="text-muted">{formatDate(comment.created_at)}</span>
+                  <span className="text-muted">{comment.created_at ? formatDate(comment.created_at) : ''}</span>
                 </div>
                 {currentUserId === comment.user_id && (
                   <button

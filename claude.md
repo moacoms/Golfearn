@@ -439,9 +439,40 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2026-01-16 업데이트)
+## 개발 진행 현황 (2026-01-19 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 1월 4주차 (클럽 카탈로그 + AI 추천) - 2026-01-19
+
+32. **골프 클럽 카탈로그 시스템**
+    - DB 마이그레이션: `supabase/migrations/20260119_add_club_catalog.sql`
+    - 5개 테이블: `golf_club_brands`, `golf_clubs`, `golf_club_reviews`, `golf_club_price_history`, `user_club_profiles`
+    - `products` 테이블에 `club_id`, `club_specs` 컬럼 추가
+    - 시드 데이터: 8개 브랜드, 50개 클럽
+
+33. **클럽 카탈로그 페이지**
+    - `/club-catalog` - 목록 (필터: 검색, 타입, 브랜드, 연도, 가격대)
+    - `/club-catalog/[id]` - 상세 (스펙, 리뷰, 시세 가이드, 관련 클럽)
+    - 컴포넌트: `ClubCard.tsx`, `ClubSelector.tsx`
+
+34. **AI 클럽 추천 시스템**
+    - `/club-recommend` - 5단계 마법사 (키 → 실력 → 미스샷 → 예산 → 결과)
+    - 추천 알고리즘: 실력 매칭(30점), 스펙 매칭(25점), 예산 매칭(20점), 선호도 매칭(25점)
+    - Server Actions: `lib/actions/club-recommendation.ts`
+
+35. **시세 가이드 기능**
+    - 상태별(S/A/B/C) 중고 시세
+    - 월별 시세 추이, 시세 대비 가격 평가
+    - Server Actions: `lib/actions/club-price.ts`
+
+36. **중고거래 연동**
+    - `/market/sell` 페이지에 ClubSelector 통합
+    - 클럽 선택 시 제목/가격 자동 입력
+    - 시세 가이드 라벨 표시
+
+37. **네비게이션 업데이트**
+    - Header에 "클럽 카탈로그", "AI 추천" 메뉴 추가
 
 #### 1월 4주차 (BM/포인트 시스템) - 2026-01-16
 
@@ -620,14 +651,15 @@ npx supabase gen types typescript --local > types/database.ts
     - DB 테이블: `practice_ranges`
 
 ### 🔜 다음 작업 (우선순위)
-1. **TypeScript 타입 생성** - `npx supabase gen types typescript` 실행 후 타입 적용
-2. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
-3. **AI 클럽 추천 기능**
-4. **관리자 페이지 보안** - 인증/권한 체크
+1. **클럽 카탈로그 마이그레이션 적용** - Supabase에서 SQL 실행
+2. **시드 데이터 적용** - `scripts/seed-clubs.ts` 실행
+3. **TypeScript 타입 재생성** - `npx supabase gen types typescript` 실행
+4. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
+5. **관리자 페이지 보안** - 인증/권한 체크
 
 ### 📋 추후 개발 예정
 - 골프장 가격 비교
-- AI 기반 매칭 추천
+- 클럽 리뷰 이미지 첨부
 - Custom SMTP (Resend) 설정
 - 프리미엄 멤버십 결제 연동
 
@@ -673,13 +705,16 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 17. [x] 연습장 기능
 18. [x] BM/포인트 시스템 (추천인, 포인트, 경험치, 뱃지, 이벤트)
 19. [x] 연습장 샘플 데이터 등록 (15개)
+20. [x] 골프 클럽 카탈로그 시스템
+21. [x] AI 클럽 추천 기능
+22. [x] 중고거래 클럽 카탈로그 연동
 
 ### 📋 진행 예정
-20. [ ] TypeScript 타입 생성 (Supabase)
-21. [ ] 레슨프로 기능 고도화
-22. [ ] AI 클럽 추천 기능
-23. [ ] 관리자 페이지 보안
-24. [ ] 프리미엄 멤버십 결제 연동
+23. [ ] 클럽 카탈로그 마이그레이션/시드 적용
+24. [ ] TypeScript 타입 재생성 (Supabase)
+25. [ ] 레슨프로 기능 고도화
+26. [ ] 관리자 페이지 보안
+27. [ ] 프리미엄 멤버십 결제 연동
 
 ---
 
