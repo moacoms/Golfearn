@@ -74,6 +74,40 @@ components/layout/Header.tsx
 - 클릭 시 /admin 페이지로 이동
 ```
 
+### 7. YouTube 쇼츠 제작 가이드 ✅
+```
+marketing-outputs/youtube/shorts/
+├── CAPCUT_TUTORIAL_쇼츠1_골린이의고민.md  # CapCut 실전 가이드
+└── STORYBOARD_쇼츠1_골린이의고민.md       # 시각적 스토리보드
+
+- 초단위 타임라인
+- 복사용 텍스트 전체
+- 업로드 설정 (제목, 설명, 태그)
+```
+
+### 8. Canva 디자인 가이드 ✅
+```
+marketing-outputs/design/
+└── CANVA_YOUTUBE_이미지_가이드.md
+
+- 프로필, 배너, 썸네일 제작 방법
+- Golfearn 브랜드 색상 (#10B981)
+- 폰트 추천 (Noto Sans KR, Montserrat)
+```
+
+### 9. YouTube 채널 이미지 제작 (Canva) ✅
+```
+제작 완료:
+├── 프로필 사진 (800x800)
+│   - 녹색 배경 (#10B981) + "G" 흰색 로고
+│
+└── 배너 이미지 (2560x1440)
+    - 골프 아이콘 🏌️
+    - "Golfearn 골프런"
+    - "늦게 시작해도 괜찮아, 함께라면"
+    - "골린이 전용 커뮤니티"
+```
+
 ---
 
 ## 오늘의 주요 변경 사항
@@ -183,8 +217,12 @@ npx supabase gen types typescript --project-id bfcmjumgfrblvyjuvmbk > types/data
 ## 내일 시작할 때
 
 ```
-"Vercel 환경변수 설정했어요" 또는
-"AI 클럽 검색 테스트 해볼게요" 또는
-"쇼츠 제작 시작할게요"
+"YouTube에 이미지 업로드할게요"
 ```
 라고 말씀해주시면 바로 이어서 진행하겠습니다.
+
+### 내일 이어서 할 작업
+1. YouTube Studio에서 프로필/배너 업로드
+2. 채널 설명 입력
+3. 첫 쇼츠 제작 (CapCut)
+4. 다른 SNS 채널 생성 (Instagram, X)
