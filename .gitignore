@@ -42,7 +42,9 @@ next-env.d.ts
 *.iml
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/agents/
+!.claude/skills/
 
 # Supabase
 /supabase/.temp
