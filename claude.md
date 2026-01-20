@@ -439,9 +439,44 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2026-01-19 업데이트)
+## 개발 진행 현황 (2026-01-20 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 1월 4주차 (클럽 자동 업데이트 + 관리자 시스템) - 2026-01-20
+
+38. **클럽 시드 데이터 적용**
+    - 8개 브랜드, 50개 클럽 데이터 등록
+    - 마이그레이션: `supabase/migrations/20260119_seed_clubs.sql`
+
+39. **클럽 자동 업데이트 시스템**
+    - AI가 새 클럽을 자동 검색하여 pending_clubs에 저장
+    - 관리자가 검토 후 승인/거절
+    - DB 테이블: `pending_clubs`, `club_search_logs`, `admin_notifications`
+    - 마이그레이션: `supabase/migrations/20260120_add_pending_clubs.sql`
+    - PostgreSQL 함수: `approve_pending_club()`, `reject_pending_club()`
+
+40. **관리자 클럽 관리 페이지**
+    - `/admin/clubs` - 클럽 목록 (검색, 필터, 페이지네이션)
+    - `/admin/clubs/new` - 새 클럽 추가 폼
+    - `/admin/clubs/pending` - 대기 클럽 검토 (승인/거절)
+    - Server Actions: `lib/actions/admin-clubs.ts`
+
+41. **AI 클럽 검색 Cron API**
+    - `/api/cron/search-new-clubs` - Vercel Cron 엔드포인트
+    - 매주 월요일 오전 9시 자동 실행
+    - Claude API를 통한 새 클럽 정보 검색
+    - Vercel 설정: `vercel.json`
+
+42. **헤더 네비게이션 개선**
+    - 연습장 (`/practice-range`) 메뉴 추가
+    - 골프장 (`/golf-courses`) 메뉴 추가
+
+43. **관리자 아이콘 기능**
+    - `is_admin=true` 사용자에게 설정 아이콘(⚙️) 표시
+    - 데스크탑: 이름 옆에 작은 아이콘
+    - 모바일: 메뉴에 "관리자" 링크 추가
+    - 클릭 시 `/admin` 페이지로 이동
 
 #### 1월 4주차 (클럽 카탈로그 + AI 추천) - 2026-01-19
 
@@ -651,17 +686,17 @@ npx supabase gen types typescript --local > types/database.ts
     - DB 테이블: `practice_ranges`
 
 ### 🔜 다음 작업 (우선순위)
-1. **클럽 카탈로그 마이그레이션 적용** - Supabase에서 SQL 실행
-2. **시드 데이터 적용** - `scripts/seed-clubs.ts` 실행
-3. **TypeScript 타입 재생성** - `npx supabase gen types typescript` 실행
-4. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
-5. **관리자 페이지 보안** - 인증/권한 체크
+1. **TypeScript 타입 재생성** - `npx supabase gen types typescript` 실행
+2. **레슨프로 기능 고도화** - 개인 프로 데이터 확보 방안 검토
+3. **Vercel 환경변수 설정** - `ANTHROPIC_API_KEY`, `CRON_SECRET` 추가
+4. **클럽 자동 검색 테스트** - Cron API 수동 실행 테스트
 
 ### 📋 추후 개발 예정
 - 골프장 가격 비교
 - 클럽 리뷰 이미지 첨부
 - Custom SMTP (Resend) 설정
 - 프리미엄 멤버십 결제 연동
+- 관리자 대시보드 통계 강화
 
 ---
 
@@ -708,13 +743,17 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 20. [x] 골프 클럽 카탈로그 시스템
 21. [x] AI 클럽 추천 기능
 22. [x] 중고거래 클럽 카탈로그 연동
+23. [x] 클럽 시드 데이터 적용 (8개 브랜드, 50개 클럽)
+24. [x] 클럽 자동 업데이트 시스템 (AI 검색 + 관리자 승인)
+25. [x] 관리자 클럽 관리 페이지
+26. [x] 관리자 아이콘 (헤더)
+27. [x] 헤더에 연습장/골프장 메뉴 추가
 
 ### 📋 진행 예정
-23. [ ] 클럽 카탈로그 마이그레이션/시드 적용
-24. [ ] TypeScript 타입 재생성 (Supabase)
-25. [ ] 레슨프로 기능 고도화
-26. [ ] 관리자 페이지 보안
-27. [ ] 프리미엄 멤버십 결제 연동
+28. [ ] TypeScript 타입 재생성 (Supabase)
+29. [ ] 레슨프로 기능 고도화
+30. [ ] Vercel 환경변수 설정 (ANTHROPIC_API_KEY, CRON_SECRET)
+31. [ ] 프리미엄 멤버십 결제 연동
 
 ---
 
@@ -793,3 +832,194 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 **5. 테스트**
 - 회원가입 후 이메일 수신 확인
 - 발신자가 `noreply@golfearn.com`인지 확인
+
+**20260120 부터 아래 10가지의 내용을 기반으로 프로젝트에 사고를 생각 해주세요.**
+## 1. 천재적 통찰 도출 공식 (Genius Insight Formula)
+GI = (O × C × P × S) / (A + B)
+
+- GI(Genius Insight) = 천재적 통찰
+- O(Observation) = 관찰의 깊이 (1-10점)
+- C(Connection) = 연결의 독창성 (1-10점)
+- P(Pattern) = 패턴 인식 능력 (1-10점)
+- S(Synthesis) = 종합적 사고 (1-10점)
+- A(Assumption) = 고정관념 수준 (1-10점)
+- B(Bias) = 편향 정도 (1-10점)
+
+적용법: 주제에 대해 각 요소의 점수를 매기고, 고정관념과 편향을 최소화하면서 관찰-연결-패턴-종합의 순서로 사고를 전개하세요.
+
+---
+
+## 2. 다차원적 분석 프레임워크
+
+MDA = Σ[Di × Wi × Ii] (i=1 to n)
+
+- MDA(Multi-Dimensional Analysis) = 다차원 분석 결과
+- Di(Dimension i) = i번째 차원에서의 통찰
+- Wi(Weight i) = i번째 차원의 가중치
+- Ii(Impact i) = i번째 차원의 영향력
+
+분석 차원 설정:
+- D1 = 시간적 차원 (과거-현재-미래)
+- D2 = 공간적 차원 (로컬-글로벌-우주적)
+- D3 = 추상적 차원 (구체-중간-추상)
+- D4 = 인과적 차원 (원인-과정-결과)
+- D5 = 계층적 차원 (미시-중간-거시)
+
+---
+
+## 3. 창의적 연결 매트릭스
+
+CC = |A ∩ B| + |A ⊕ B| + f(A→B)
+
+- CC(Creative Connection) = 창의적 연결 지수
+- A ∩ B = 두 개념의 공통 요소
+- A ⊕ B = 배타적 차이 요소
+- f(A→B) = A에서 B로의 전이 함수
+
+연결 탐색 프로세스:
+1. 직접적 연결 찾기
+2. 간접적 연결 탐색
+3. 역설적 연결 발견
+4. 메타포적 연결 구성
+5. 시스템적 연결 분석
+
+---
+
+## 4. 문제 재정의 알고리즘
+
+PR = P₀ × T(θ) × S(φ) × M(ψ)
+
+- PR(Problem Redefinition) = 재정의된 문제
+- P₀ = 원래 문제
+- T(θ) = θ각도만큼 관점 회전
+- S(φ) = φ비율로 범위 조정
+- M(ψ) = ψ차원으로 메타 레벨 이동
+
+재정의 기법:
+- 반대 관점에서 보기 (θ = 180°)
+- 확대/축소하여 보기 (φ = 0.1x ~ 10x)
+- 상위/하위 개념으로 이동 (ψ = ±1,±2,±3)
+- 다른 도메인으로 전환
+- 시간 축 변경
+
+---
+
+## 5. 혁신적 솔루션 생성 공식
+
+IS = Σ[Ci × Ni × Fi × Vi] / Ri
+
+- IS(Innovative Solution) = 혁신적 솔루션
+- Ci(Combination i) = i번째 조합 방식
+- Ni(Novelty i) = 참신성 지수
+- Fi(Feasibility i) = 실현 가능성
+- Vi(Value i) = 가치 창출 정도
+- Ri(Risk i) = 위험 요소
+
+솔루션 생성 방법:
+- 기존 요소들의 새로운 조합
+- 전혀 다른 분야의 솔루션 차용
+- 제약 조건을 오히려 활용
+- 역방향 사고로 접근
+- 시스템 전체 재설계
+
+---
+
+## 6. 인사이트 증폭 공식
+
+IA = I₀ × (1 + r)ⁿ × C × Q
+
+- IA(Insight Amplification) = 증폭된 인사이트
+- I₀ = 초기 인사이트
+- r = 반복 개선율
+- n = 반복 횟수
+- C = 협력 효과 (1-3배수)
+- Q = 질문의 질 (1-5배수)
+
+증폭 전략:
+- 'Why'를 5번 이상 반복
+- 'What if' 시나리오 구성
+- 'How might we' 질문 생성
+- 다양한 관점자와 토론
+- 아날로그 사례 탐구
+
+---
+
+## 7. 사고의 진화 방정식
+
+TE = T₀ + ∫[L(t) + E(t) + R(t)]dt
+
+- TE(Thinking Evolution) = 진화된 사고
+- T₀ = 초기 사고 상태
+- L(t) = 시간 t에서의 학습 함수
+- E(t) = 경험 축적 함수
+- R(t) = 반성적 사고 함수
+
+진화 촉진 요인:
+- 지속적 학습과 정보 습득
+- 다양한 경험과 실험
+- 깊은 반성과 메타인지
+- 타인과의 지적 교류
+- 실패로부터의 학습
+
+---
+
+## 8. 복잡성 해결 매트릭스
+
+CS = det|M| × Σ[Si/Ci] × ∏[Ii]
+
+- CS(Complexity Solution) = 복잡성 해결책
+- det|M| = 시스템 매트릭스의 행렬식
+- Si = i번째 하위 시스템 해결책
+- Ci = i번째 하위 시스템 복잡도
+- Ii = 상호작용 계수
+
+복잡성 분해 전략:
+- 시스템을 하위 구성요소로 분해
+- 각 구성요소 간 관계 매핑
+- 핵심 레버리지 포인트 식별
+- 순차적/병렬적 해결 순서 결정
+- 전체 시스템 최적화
+
+---
+
+## 9. 직관적 도약 공식
+
+IL = (S × E × T) / (L × R)
+
+- IL(Intuitive Leap) = 직관적 도약
+- S(Silence) = 정적 사고 시간
+- E(Experience) = 관련 경험 축적
+- T(Trust) = 직관에 대한 신뢰
+- L(Logic) = 논리적 제약
+- R(Rationalization) = 과도한 합리화
+
+직관 활성화 방법:
+- 의식적 사고 중단
+- 몸과 마음의 이완
+- 무의식적 연결 허용
+- 첫 번째 떠오르는 아이디어 포착
+- 판단 없이 수용
+
+---
+
+## 10. 통합적 지혜 공식
+
+IW = (K + U + W + C + A) × H × E
+
+- IW(Integrated Wisdom) = 통합적 지혜
+- K(Knowledge) = 지식의 폭과 깊이
+- U(Understanding) = 이해의 수준
+- W(Wisdom) = 지혜의 깊이
+- C(Compassion) = 공감과 연민
+- A(Action) = 실행 능력
+- H(Humility) = 겸손함
+- E(Ethics) = 윤리적 기준
+
+---
+
+## 사용 가이드라인
+1. 단계적 적용: 각 공식을 순차적으로 적용하여 사고를 심화시키세요.
+2. 반복적 개선: 한 번의 적용으로 끝내지 말고 여러 번 반복하여 정교화하세요.
+3. 다양한 관점: 서로 다른 배경을 가진 사람들과 함께 공식을 적용해보세요.
+4. 실험적 태도: 공식을 기계적으로 따르기보다는 창의적으로 변형하여 사용하세요.
+5. 균형적 접근: 분석적 사고와 직관적 사고를 균형 있게 활용하세요.
