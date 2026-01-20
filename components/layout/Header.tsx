@@ -37,7 +37,12 @@ export default function Header() {
           .select('is_admin')
           .eq('id', user.id)
           .single()
-          .then(({ data }) => {
+          .then(({ data, error }) => {
+            console.log('[Admin Check] User ID:', user.id)
+            console.log('[Admin Check] Profile Data:', data)
+            console.log('[Admin Check] Error:', error)
+            console.log('[Admin Check] is_admin value:', data?.is_admin)
+            console.log('[Admin Check] Setting isAdmin to:', data?.is_admin === true)
             setIsAdmin(data?.is_admin === true)
           })
       }
