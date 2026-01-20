@@ -44,11 +44,17 @@ export default async function AdminLayout({
                 <Link href="/admin" className="hover:text-primary">
                   대시보드
                 </Link>
+                <Link href="/admin/clubs" className="hover:text-primary">
+                  클럽 관리
+                </Link>
+                <Link href="/admin/clubs/pending" className="hover:text-primary">
+                  대기 클럽
+                </Link>
                 <Link href="/admin/marketing" className="hover:text-primary">
                   마케팅
                 </Link>
                 <Link href="/admin/practice-range-import" className="hover:text-primary">
-                  연습장 가져오기
+                  연습장
                 </Link>
               </nav>
             </div>
