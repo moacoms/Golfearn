@@ -10,6 +10,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -19,7 +20,7 @@ export default function Header() {
       setUser(user)
       setLoading(false)
 
-      // 읽지 않은 알림 수 조회
+      // 읽지 않은 알림 수 조회 및 관리자 확인
       if (user) {
         supabase
           .from('notifications')
@@ -29,6 +30,17 @@ export default function Header() {
           .then(({ count }) => {
             setUnreadCount(count || 0)
           })
+
+        // 관리자 권한 확인
+        supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => {
+            const profileData = data as { is_admin?: boolean } | null
+            setIsAdmin(profileData?.is_admin === true)
+          })
       }
     })
 
@@ -37,6 +49,7 @@ export default function Header() {
       setUser(session?.user ?? null)
       if (!session?.user) {
         setUnreadCount(0)
+        setIsAdmin(false)
       }
     })
 
@@ -57,6 +70,8 @@ export default function Header() {
     { href: '/community', label: '커뮤니티' },
     { href: '/join', label: '조인' },
     { href: '/lesson-pro', label: '레슨프로' },
+    { href: '/practice-range', label: '연습장' },
+    { href: '/golf-courses', label: '골프장' },
   ]
 
   return (
@@ -101,9 +116,23 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-              <Link href="/mypage" className="text-muted hover:text-foreground transition-colors">
-                {user.user_metadata?.full_name || user.email?.split('@')[0]}님
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href="/mypage" className="text-muted hover:text-foreground transition-colors">
+                  {user.user_metadata?.full_name || user.email?.split('@')[0]}님
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="p-1 text-gray-500 hover:text-primary transition-colors"
+                    title="관리자 페이지"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </Link>
+                )}
+              </div>
               <button onClick={handleSignOut} className="btn btn-outline">
                 로그아웃
               </button>
@@ -170,6 +199,19 @@ export default function Header() {
                       </span>
                     )}
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 text-muted hover:text-foreground"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>관리자</span>
+                    </Link>
+                  )}
                   <div className="flex gap-3">
                     <Link href="/mypage" className="btn btn-outline flex-1" onClick={() => setIsMenuOpen(false)}>
                       마이페이지
