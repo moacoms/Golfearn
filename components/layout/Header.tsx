@@ -1,16 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isGolfInfoOpen, setIsGolfInfoOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -56,22 +58,38 @@ export default function Header() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsGolfInfoOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = '/'
   }
 
-  const navItems = [
-    { href: '/guide', label: '입문 가이드' },
-    { href: '/club-catalog', label: '클럽 카탈로그' },
-    { href: '/club-recommend', label: 'AI 추천' },
+  // 메인 메뉴 (핵심 기능)
+  const mainNavItems = [
+    { href: '/club-recommend', label: '클럽 추천' },
     { href: '/market', label: '중고거래' },
-    { href: '/community', label: '커뮤니티' },
     { href: '/join', label: '조인' },
-    { href: '/lesson-pro', label: '레슨프로' },
-    { href: '/practice-range', label: '연습장' },
-    { href: '/golf-courses', label: '골프장' },
+    { href: '/community', label: '커뮤니티' },
+  ]
+
+  // 골프 정보 드롭다운 메뉴
+  const golfInfoItems = [
+    { href: '/practice-range', label: '연습장', icon: '📍' },
+    { href: '/golf-courses', label: '골프장', icon: '⛳' },
+    { href: '/lesson-pro', label: '레슨프로', icon: '👨‍🏫' },
+    { href: '/guide', label: '입문 가이드', icon: '📖' },
+    { href: '/club-catalog', label: '클럽 카탈로그', icon: '🏌️' },
   ]
 
   return (
@@ -83,16 +101,50 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
+        <div className="hidden md:flex items-center gap-6">
+          {mainNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-muted hover:text-foreground transition-colors"
+              className="text-muted hover:text-foreground transition-colors font-medium"
             >
               {item.label}
             </Link>
           ))}
+
+          {/* 골프 정보 드롭다운 */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsGolfInfoOpen(!isGolfInfoOpen)}
+              className="flex items-center gap-1 text-muted hover:text-foreground transition-colors font-medium"
+            >
+              골프 정보
+              <svg
+                className={`w-4 h-4 transition-transform ${isGolfInfoOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isGolfInfoOpen && (
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-border py-2 z-50">
+                {golfInfoItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-3 px-4 py-2.5 text-muted hover:text-foreground hover:bg-gray-50 transition-colors"
+                    onClick={() => setIsGolfInfoOpen(false)}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Auth Buttons */}
@@ -173,23 +225,45 @@ export default function Header() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-b border-border">
-          <div className="container py-4 space-y-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block text-muted hover:text-foreground"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-3 pt-4 border-t border-border">
+          <div className="container py-4 space-y-1">
+            {/* 메인 메뉴 */}
+            <div className="pb-3 border-b border-border">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2 px-2">주요 기능</p>
+              {mainNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block px-2 py-2.5 text-foreground hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* 골프 정보 */}
+            <div className="py-3 border-b border-border">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2 px-2">골프 정보</p>
+              {golfInfoItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 px-2 py-2.5 text-muted hover:text-foreground hover:bg-gray-50 rounded-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* 인증 영역 */}
+            <div className="pt-3 space-y-3">
               {user ? (
                 <>
                   <Link
                     href="/mypage/notifications"
-                    className="flex items-center justify-between text-muted hover:text-foreground"
+                    className="flex items-center justify-between px-2 py-2.5 text-muted hover:text-foreground hover:bg-gray-50 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span>알림</span>
@@ -202,7 +276,7 @@ export default function Header() {
                   {isAdmin && (
                     <Link
                       href="/admin"
-                      className="flex items-center gap-2 text-muted hover:text-foreground"
+                      className="flex items-center gap-2 px-2 py-2.5 text-muted hover:text-foreground hover:bg-gray-50 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +286,7 @@ export default function Header() {
                       <span>관리자</span>
                     </Link>
                   )}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-2">
                     <Link href="/mypage" className="btn btn-outline flex-1" onClick={() => setIsMenuOpen(false)}>
                       마이페이지
                     </Link>
@@ -222,14 +296,14 @@ export default function Header() {
                   </div>
                 </>
               ) : (
-                <>
-                  <Link href="/login" className="btn btn-outline flex-1">
+                <div className="flex gap-3">
+                  <Link href="/login" className="btn btn-outline flex-1" onClick={() => setIsMenuOpen(false)}>
                     로그인
                   </Link>
-                  <Link href="/signup" className="btn btn-primary flex-1">
+                  <Link href="/signup" className="btn btn-primary flex-1" onClick={() => setIsMenuOpen(false)}>
                     회원가입
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
