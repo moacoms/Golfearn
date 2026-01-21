@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { getClubRecommendations } from '@/lib/actions/club-recommendation'
 import ClubCard from '@/components/club/ClubCard'
+import LowestPriceSection from '@/components/club/LowestPriceSection'
 import type {
   ClubRecommendationInput,
   ClubRecommendation,
@@ -332,6 +333,12 @@ export default function ClubRecommendPage() {
                                 ))}
                               </ul>
                             </div>
+
+                            {/* 최저가 비교 섹션 */}
+                            <LowestPriceSection
+                              clubName={rec.club.name}
+                              brandName={rec.club.brand?.name}
+                            />
                           </div>
                         ))}
                       </div>
