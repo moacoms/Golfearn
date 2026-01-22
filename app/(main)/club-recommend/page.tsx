@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getClubRecommendations } from '@/lib/actions/club-recommendation'
 import ClubCard from '@/components/club/ClubCard'
 import LowestPriceSection from '@/components/club/LowestPriceSection'
+import LatestProductsSection from '@/components/club/LatestProductsSection'
 import type {
   ClubRecommendationInput,
   ClubRecommendation,
@@ -289,6 +290,33 @@ export default function ClubRecommendPage() {
               <p className="text-muted">
                 입력하신 정보를 바탕으로 맞춤 추천해드립니다
               </p>
+            </div>
+
+            {/* 최신 상품 섹션 - 네이버 쇼핑 */}
+            <div className="space-y-8 mb-12">
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🔥</span>
+                  최신 인기 드라이버
+                </h3>
+                <LatestProductsSection clubType="driver" budget={input.budget} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">⛳</span>
+                  최신 인기 아이언
+                </h3>
+                <LatestProductsSection clubType="iron" budget={input.budget} />
+              </div>
+            </div>
+
+            {/* 구분선 */}
+            <div className="border-t border-gray-200 my-8 pt-8">
+              <h3 className="text-lg font-bold text-gray-600 mb-6 flex items-center gap-2">
+                <span className="text-xl">📊</span>
+                DB 기반 맞춤 추천 (참고용)
+              </h3>
             </div>
 
             {results && (
