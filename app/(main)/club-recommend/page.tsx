@@ -304,10 +304,42 @@ export default function ClubRecommendPage() {
 
               <div>
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🌲</span>
+                  최신 인기 페어웨이우드
+                </h3>
+                <LatestProductsSection clubType="wood" budget={input.budget} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🎯</span>
+                  최신 인기 하이브리드/유틸리티
+                </h3>
+                <LatestProductsSection clubType="hybrid" budget={input.budget} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <span className="text-2xl">⛳</span>
                   최신 인기 아이언
                 </h3>
                 <LatestProductsSection clubType="iron" budget={input.budget} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🏌️</span>
+                  최신 인기 웨지
+                </h3>
+                <LatestProductsSection clubType="wedge" budget={input.budget} />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🕳️</span>
+                  최신 인기 퍼터
+                </h3>
+                <LatestProductsSection clubType="putter" budget={input.budget} />
               </div>
             </div>
 
