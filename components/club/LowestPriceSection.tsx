@@ -16,9 +16,20 @@ interface ShoppingItem {
 interface LowestPriceSectionProps {
   clubName: string
   brandName?: string
+  clubType?: 'driver' | 'wood' | 'hybrid' | 'iron' | 'wedge' | 'putter'
 }
 
-export default function LowestPriceSection({ clubName, brandName }: LowestPriceSectionProps) {
+// 클럽 타입별 한글 검색어
+const CLUB_TYPE_KOREAN: Record<string, string> = {
+  driver: '드라이버',
+  wood: '우드',
+  hybrid: '하이브리드 유틸리티',
+  iron: '아이언세트',
+  wedge: '웨지',
+  putter: '퍼터',
+}
+
+export default function LowestPriceSection({ clubName, brandName, clubType }: LowestPriceSectionProps) {
   const [items, setItems] = useState<ShoppingItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,14 +40,21 @@ export default function LowestPriceSection({ clubName, brandName }: LowestPriceS
       setError(null)
 
       try {
-        // 검색어 구성: 브랜드명 + 클럽명 + "골프"
+        // 검색어 구성: 브랜드명 + 클럽명 + 클럽타입(한글)
+        // 예: "테일러메이드 스텔스2 드라이버"
+        const clubTypeKorean = clubType ? CLUB_TYPE_KOREAN[clubType] : ''
         const searchQuery = brandName
-          ? `${brandName} ${clubName} 골프`
-          : `${clubName} 골프`
+          ? `${brandName} ${clubName} ${clubTypeKorean}`.trim()
+          : `${clubName} ${clubTypeKorean}`.trim()
 
-        const response = await fetch(
-          `/api/naver-shopping?query=${encodeURIComponent(searchQuery)}&display=5&sort=asc`
-        )
+        const params = new URLSearchParams({
+          query: searchQuery,
+          display: '5',
+          sort: 'asc',
+          clubType: clubType || 'default',
+        })
+
+        const response = await fetch(`/api/naver-shopping?${params}`)
 
         if (!response.ok) {
           throw new Error('가격 정보를 불러오는데 실패했습니다.')
@@ -55,7 +73,7 @@ export default function LowestPriceSection({ clubName, brandName }: LowestPriceS
     if (clubName) {
       fetchPrices()
     }
-  }, [clubName, brandName])
+  }, [clubName, brandName, clubType])
 
   // 가격 포맷팅
   const formatPrice = (price: number) => {
@@ -155,7 +173,11 @@ export default function LowestPriceSection({ clubName, brandName }: LowestPriceS
 
       {/* 더 많은 상품 보기 링크 */}
       <a
-        href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(brandName ? `${brandName} ${clubName}` : clubName)}`}
+        href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(
+          brandName
+            ? `${brandName} ${clubName} ${clubType ? CLUB_TYPE_KOREAN[clubType] : ''}`.trim()
+            : `${clubName} ${clubType ? CLUB_TYPE_KOREAN[clubType] : ''}`.trim()
+        )}`}
         target="_blank"
         rel="noopener noreferrer"
         className="block text-center text-sm text-blue-600 hover:text-blue-800 mt-3 pt-3 border-t border-blue-100"

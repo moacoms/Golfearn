@@ -301,44 +301,47 @@ export default function ClubRecommendPage() {
                       <h3 className="text-xl font-bold mb-4">
                         {CLUB_TYPE_LABELS[type as ClubType]} 추천
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {recommendations.map((rec) => (
-                          <div key={rec.club.id} className="relative">
+                          <div key={rec.club.id} className="relative bg-white rounded-xl border border-gray-200 overflow-hidden">
                             {/* 추천 점수 배지 */}
-                            <div className="absolute -top-2 -right-2 z-10 bg-primary text-white text-sm font-bold w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
+                            <div className="absolute top-3 right-3 z-10 bg-primary text-white text-sm font-bold w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
                               {Math.round(rec.score)}점
                             </div>
 
-                            <ClubCard club={rec.club} />
+                            <div className="p-4">
+                              <ClubCard club={rec.club} compact />
 
-                            {/* 추천 이유 */}
-                            <div className="mt-2 p-3 bg-primary/5 rounded-lg">
-                              <p className="text-sm font-medium mb-1">추천 이유</p>
-                              <ul className="text-xs text-muted space-y-1">
-                                {rec.reasons.slice(0, 3).map((reason, i) => (
-                                  <li key={i} className="flex items-start gap-1">
-                                    <svg
-                                      className="w-4 h-4 text-primary flex-shrink-0"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                    {reason}
-                                  </li>
-                                ))}
-                              </ul>
+                              {/* 추천 이유 */}
+                              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm font-medium mb-2">추천 이유</p>
+                                <ul className="text-xs text-muted space-y-1">
+                                  {rec.reasons.slice(0, 3).map((reason, i) => (
+                                    <li key={i} className="flex items-start gap-1">
+                                      <svg
+                                        className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                      {reason}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* 최저가 비교 섹션 */}
+                              <LowestPriceSection
+                                clubName={rec.club.name}
+                                brandName={rec.club.brand?.name}
+                                clubType={type as 'driver' | 'wood' | 'hybrid' | 'iron' | 'wedge' | 'putter'}
+                              />
                             </div>
-
-                            {/* 최저가 비교 섹션 */}
-                            <LowestPriceSection
-                              clubName={rec.club.name}
-                              brandName={rec.club.brand?.name}
-                            />
                           </div>
                         ))}
                       </div>
