@@ -1,0 +1,404 @@
+{
+  "common": {
+    "signIn": "로그인",
+    "signUp": "회원가입",
+    "logout": "로그아웃",
+    "settings": "설정",
+    "loading": "로딩 중...",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "수정",
+    "back": "뒤로",
+    "next": "다음",
+    "submit": "제출",
+    "search": "검색",
+    "filter": "필터",
+    "all": "전체",
+    "free": "무료",
+    "pro": "프로"
+  },
+  "nav": {
+    "home": "홈",
+    "analysis": "분석",
+    "pricing": "가격",
+    "settings": "설정",
+    "myAnalysis": "나의 분석"
+  },
+  "landing": {
+    "hero": {
+      "title": "AI 골프 코치",
+      "subtitle": "분석. 개선. 추적.",
+      "description": "론치모니터 데이터를 업로드하면 프로 수준의 스윙 분석을 즉시 받아보세요. 비싼 레슨 없이도 가능합니다.",
+      "cta": "무료 분석 시작",
+      "watchDemo": "데모 보기",
+      "supportedDevices": "트랙맨, 골프존, GDR, 카카오VX 등 지원"
+    },
+    "features": {
+      "title": "이용 방법",
+      "upload": {
+        "title": "데이터 업로드",
+        "description": "론치모니터 화면을 촬영하거나 직접 데이터를 입력하세요"
+      },
+      "analyze": {
+        "title": "AI 분석",
+        "description": "20년 경력 프로 코치처럼 AI가 스윙 데이터를 분석합니다"
+      },
+      "track": {
+        "title": "발전 추적",
+        "description": "상세한 차트와 인사이트로 시간에 따른 발전을 확인하세요"
+      },
+      "improve": {
+        "title": "실력 향상",
+        "description": "문제점을 해결할 맞춤 드릴을 추천받으세요"
+      }
+    },
+    "stats": {
+      "users": "활성 골퍼",
+      "analyses": "분석된 스윙",
+      "improvement": "평균 거리 향상",
+      "rating": "사용자 평점"
+    },
+    "testimonials": {
+      "title": "골퍼들의 후기",
+      "testimonial1": {
+        "text": "골프런 AI로 2개월 만에 드라이버 거리가 15야드 늘었어요. 피드백이 정말 상세합니다.",
+        "author": "김철수",
+        "role": "핸디캡 18 → 14"
+      },
+      "testimonial2": {
+        "text": "드디어 합리적인 가격으로 프로 수준의 스윙 분석을 받을 수 있게 됐어요. 주머니 속 코치 같아요.",
+        "author": "이영희",
+        "role": "주말 골퍼"
+      },
+      "testimonial3": {
+        "text": "OCR 기능이 대박이에요. 트랙맨 화면 사진만 찍으면 바로 분석이 됩니다.",
+        "author": "박민수",
+        "role": "골프 매니아"
+      }
+    },
+    "comparison": {
+      "title": "왜 골프런인가요?",
+      "traditional": "기존 레슨",
+      "golfearn": "골프런 AI",
+      "price": {
+        "traditional": "10-20만원/회",
+        "golfearn": "월 12,900원"
+      },
+      "availability": {
+        "label": "이용 가능 시간",
+        "traditional": "예약 필요",
+        "golfearn": "24시간 어디서나"
+      },
+      "tracking": {
+        "label": "발전 추적",
+        "traditional": "수기 메모",
+        "golfearn": "자동 차트"
+      },
+      "feedback": {
+        "label": "피드백 방식",
+        "traditional": "주관적",
+        "golfearn": "데이터 기반"
+      }
+    },
+    "cta": {
+      "title": "실력 향상 준비 되셨나요?",
+      "description": "이미 수천 명의 골퍼가 AI 분석으로 실력을 향상시키고 있습니다.",
+      "button": "무료로 시작하기",
+      "noCard": "신용카드 필요 없음"
+    }
+  },
+  "pricing": {
+    "title": "심플하고 투명한 가격",
+    "subtitle": "무료로 시작하고, 준비되면 업그레이드하세요",
+    "monthly": "월간",
+    "annual": "연간",
+    "annualSave": "17% 할인",
+    "plans": {
+      "free": {
+        "name": "무료",
+        "price": "₩0",
+        "period": "영구 무료",
+        "description": "체험용으로 딱",
+        "features": [
+          "월 3회 분석",
+          "기본 AI 피드백",
+          "수동 데이터 입력",
+          "7일 히스토리"
+        ],
+        "cta": "시작하기"
+      },
+      "basic": {
+        "name": "베이직",
+        "price": "₩12,900",
+        "period": "월",
+        "description": "본격적인 골퍼를 위해",
+        "features": [
+          "무제한 분석",
+          "상세 AI 인사이트",
+          "사진 OCR (월 50회)",
+          "무제한 히스토리",
+          "클럽별 통계",
+          "발전 차트"
+        ],
+        "cta": "베이직 시작",
+        "popular": "가장 인기"
+      },
+      "pro": {
+        "name": "프로",
+        "price": "₩24,900",
+        "period": "월",
+        "description": "최대한의 향상을 위해",
+        "features": [
+          "베이직의 모든 기능",
+          "무제한 OCR",
+          "영상 스윙 분석",
+          "AI 채팅 코치",
+          "목표 추적",
+          "우선 지원"
+        ],
+        "cta": "프로 시작"
+      }
+    },
+    "faq": {
+      "title": "자주 묻는 질문",
+      "q1": {
+        "question": "언제든지 취소할 수 있나요?",
+        "answer": "네, 언제든지 구독을 취소할 수 있습니다. 별도의 절차 없이 바로 취소됩니다."
+      },
+      "q2": {
+        "question": "어떤 론치모니터를 지원하나요?",
+        "answer": "트랙맨, 플라이트스코프, GCQuad, Mevo, 골프존, GDR, 카카오VX 등을 지원합니다."
+      },
+      "q3": {
+        "question": "OCR 정확도는 어떤가요?",
+        "answer": "지원 기기에 대해 95% 이상의 정확도를 자랑합니다. 추출된 데이터는 언제든 수정할 수 있습니다."
+      }
+    }
+  },
+  "analysis": {
+    "dashboard": {
+      "title": "나의 분석",
+      "welcome": "안녕하세요, {name}님!",
+      "improving": "스윙이 좋아지고 있어요!",
+      "newAnalysis": "새 분석",
+      "recentSessions": "최근 세션",
+      "noSessions": "아직 세션이 없습니다. 첫 분석을 시작해보세요!",
+      "viewAll": "전체 보기"
+    },
+    "stats": {
+      "driverAvg": "드라이버 평균",
+      "thisMonth": "이번 달",
+      "sessions": "세션",
+      "goal": "목표 진행률",
+      "improvement": "향상"
+    },
+    "new": {
+      "title": "새 스윙 분석",
+      "step1": {
+        "title": "데이터 소스 선택",
+        "photo": "사진 업로드",
+        "photoDesc": "화면 사진 촬영",
+        "manual": "직접 입력",
+        "manualDesc": "데이터 직접 입력",
+        "api": "앱 연결",
+        "apiDesc": "준비 중"
+      },
+      "step2": {
+        "title": "론치모니터 선택",
+        "trackman": "트랙맨",
+        "golfzon": "골프존",
+        "gdr": "GDR",
+        "kakao": "카카오VX",
+        "flightscope": "플라이트스코프",
+        "other": "기타"
+      },
+      "step3": {
+        "title": "세션 정보",
+        "date": "날짜",
+        "type": "세션 유형",
+        "practice": "연습",
+        "round": "라운드",
+        "fitting": "피팅",
+        "location": "장소 (선택)"
+      },
+      "step4": {
+        "title": "샷 데이터 입력",
+        "club": "클럽",
+        "addShot": "샷 추가",
+        "shots": "샷 입력됨"
+      },
+      "upload": {
+        "title": "사진 업로드",
+        "drag": "화면 사진을 여기에 드래그하세요",
+        "or": "또는 클릭하여 선택",
+        "supported": "지원 형식: JPG, PNG, HEIC",
+        "processing": "이미지 처리 중...",
+        "extracted": "데이터 추출 완료!"
+      },
+      "analyze": "분석하기",
+      "analyzing": "스윙 분석 중...",
+      "freeLeft": "무료 분석 {count}회 남음"
+    },
+    "result": {
+      "title": "분석 결과",
+      "summary": "요약",
+      "keyFindings": "주요 발견",
+      "strengths": "잘하고 있는 점",
+      "improvements": "개선이 필요한 점",
+      "drills": "추천 드릴",
+      "comparison": "지난 세션과 비교",
+      "shareResult": "결과 공유",
+      "newAnalysis": "새 분석"
+    },
+    "clubs": {
+      "title": "클럽별 통계",
+      "driver": "드라이버",
+      "woods": "페어웨이 우드",
+      "hybrids": "하이브리드",
+      "irons": "아이언",
+      "wedges": "웨지",
+      "avgCarry": "평균 캐리",
+      "avgTotal": "평균 토탈",
+      "avgBallSpeed": "평균 볼스피드",
+      "consistency": "일관성"
+    },
+    "history": {
+      "title": "분석 히스토리",
+      "filter": {
+        "all": "전체",
+        "practice": "연습",
+        "round": "라운드"
+      },
+      "empty": "아직 분석 기록이 없습니다"
+    }
+  },
+  "profile": {
+    "title": "골프 프로필",
+    "subtitle": "맞춤 분석을 위해 정보를 입력해주세요",
+    "physical": {
+      "title": "신체 정보",
+      "height": "키",
+      "weight": "몸무게",
+      "gender": "성별",
+      "male": "남성",
+      "female": "여성",
+      "other": "기타",
+      "handedness": "손잡이",
+      "right": "오른손잡이",
+      "left": "왼손잡이"
+    },
+    "golf": {
+      "title": "골프 정보",
+      "handicap": "핸디캡",
+      "experience": "골프 경력(년)",
+      "swingSpeed": "스윙 스피드",
+      "slow": "느림 (< 85 mph)",
+      "moderate": "보통 (85-95 mph)",
+      "fast": "빠름 (95-105 mph)",
+      "veryFast": "매우 빠름 (> 105 mph)",
+      "typicalMiss": "자주 나는 미스샷",
+      "slice": "슬라이스",
+      "hook": "훅",
+      "fat": "뒤땅",
+      "thin": "토핑",
+      "top": "탑볼"
+    },
+    "goals": {
+      "title": "목표",
+      "primaryGoal": "주요 목표",
+      "distance": "비거리 증가",
+      "accuracy": "정확도 향상",
+      "consistency": "일관성 향상",
+      "targetHandicap": "목표 핸디캡"
+    },
+    "preferences": {
+      "title": "선호 설정",
+      "distanceUnit": "거리 단위",
+      "yards": "야드",
+      "meters": "미터",
+      "speedUnit": "속도 단위",
+      "mph": "mph",
+      "kmh": "km/h"
+    }
+  },
+  "settings": {
+    "title": "설정",
+    "profile": "골프 프로필",
+    "subscription": "구독",
+    "notifications": "알림",
+    "language": "언어",
+    "deleteAccount": "계정 삭제"
+  },
+  "subscription": {
+    "title": "구독",
+    "currentPlan": "현재 플랜",
+    "usage": "이번 달 사용량",
+    "analyses": "분석",
+    "ocrScans": "OCR 스캔",
+    "unlimited": "무제한",
+    "upgrade": "업그레이드",
+    "cancel": "구독 취소",
+    "billingHistory": "결제 내역"
+  },
+  "units": {
+    "yards": "야드",
+    "meters": "미터",
+    "mph": "mph",
+    "kmh": "km/h",
+    "rpm": "rpm",
+    "degrees": "°"
+  },
+  "clubs": {
+    "driver": "드라이버",
+    "3wood": "3번 우드",
+    "5wood": "5번 우드",
+    "hybrid": "하이브리드",
+    "3iron": "3번 아이언",
+    "4iron": "4번 아이언",
+    "5iron": "5번 아이언",
+    "6iron": "6번 아이언",
+    "7iron": "7번 아이언",
+    "8iron": "8번 아이언",
+    "9iron": "9번 아이언",
+    "pw": "피칭웨지",
+    "gw": "갭웨지",
+    "sw": "샌드웨지",
+    "lw": "로브웨지"
+  },
+  "shotData": {
+    "ballSpeed": "볼스피드",
+    "clubSpeed": "클럽스피드",
+    "launchAngle": "발사각",
+    "spinRate": "스핀량",
+    "carry": "캐리",
+    "total": "토탈",
+    "offline": "좌우편차",
+    "peakHeight": "최고점",
+    "landAngle": "낙하각",
+    "smashFactor": "스매시팩터",
+    "attackAngle": "어택앵글",
+    "clubPath": "클럽패스",
+    "faceAngle": "페이스앵글"
+  },
+  "errors": {
+    "generic": "문제가 발생했습니다. 다시 시도해주세요.",
+    "notFound": "페이지를 찾을 수 없습니다",
+    "unauthorized": "로그인이 필요합니다",
+    "limitReached": "월간 사용 한도에 도달했습니다. 업그레이드해주세요.",
+    "ocrFailed": "이미지에서 데이터를 추출할 수 없습니다. 다시 시도하거나 직접 입력해주세요.",
+    "analysisFailed": "분석에 실패했습니다. 다시 시도해주세요."
+  },
+  "footer": {
+    "product": "제품",
+    "company": "회사",
+    "legal": "법적 고지",
+    "about": "소개",
+    "blog": "블로그",
+    "careers": "채용",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관",
+    "contact": "문의",
+    "copyright": "© {year} Golfearn. All rights reserved."
+  }
+}

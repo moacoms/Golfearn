@@ -1,0 +1,404 @@
+{
+  "common": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "logout": "Log Out",
+    "settings": "Settings",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "free": "Free",
+    "pro": "Pro"
+  },
+  "nav": {
+    "home": "Home",
+    "analysis": "Analysis",
+    "pricing": "Pricing",
+    "settings": "Settings",
+    "myAnalysis": "My Analysis"
+  },
+  "landing": {
+    "hero": {
+      "title": "Your AI Golf Coach",
+      "subtitle": "Analyze. Improve. Track.",
+      "description": "Upload your launch monitor data and get professional-level swing analysis instantly. No expensive lessons needed.",
+      "cta": "Start Free Analysis",
+      "watchDemo": "Watch Demo",
+      "supportedDevices": "Works with TrackMan, GolfZon, GDR, Kakao VX & more"
+    },
+    "features": {
+      "title": "How It Works",
+      "upload": {
+        "title": "Upload Data",
+        "description": "Take a photo of your launch monitor screen or enter data manually"
+      },
+      "analyze": {
+        "title": "AI Analysis",
+        "description": "Our AI analyzes your swing data like a 20-year pro coach"
+      },
+      "track": {
+        "title": "Track Progress",
+        "description": "See your improvement over time with detailed charts and insights"
+      },
+      "improve": {
+        "title": "Get Better",
+        "description": "Receive personalized drill recommendations to fix your issues"
+      }
+    },
+    "stats": {
+      "users": "Active Golfers",
+      "analyses": "Swings Analyzed",
+      "improvement": "Avg. Distance Gain",
+      "rating": "User Rating"
+    },
+    "testimonials": {
+      "title": "What Golfers Say",
+      "testimonial1": {
+        "text": "I improved my driver distance by 15 yards in just 2 months using Golfearn AI. The feedback is incredibly detailed.",
+        "author": "John K.",
+        "role": "Handicap 18 → 14"
+      },
+      "testimonial2": {
+        "text": "Finally, an affordable way to get professional swing analysis. It's like having a coach in your pocket.",
+        "author": "Sarah M.",
+        "role": "Weekend Golfer"
+      },
+      "testimonial3": {
+        "text": "The OCR feature is amazing. Just snap a photo of my TrackMan screen and boom - instant analysis.",
+        "author": "Mike T.",
+        "role": "Golf Enthusiast"
+      }
+    },
+    "comparison": {
+      "title": "Why Golfearn?",
+      "traditional": "Traditional Lessons",
+      "golfearn": "Golfearn AI",
+      "price": {
+        "traditional": "$100-200/session",
+        "golfearn": "$9.99/month"
+      },
+      "availability": {
+        "label": "Availability",
+        "traditional": "Schedule required",
+        "golfearn": "24/7, anywhere"
+      },
+      "tracking": {
+        "label": "Progress Tracking",
+        "traditional": "Manual notes",
+        "golfearn": "Automatic charts"
+      },
+      "feedback": {
+        "label": "Feedback Type",
+        "traditional": "Subjective",
+        "golfearn": "Data-driven"
+      }
+    },
+    "cta": {
+      "title": "Ready to Improve Your Game?",
+      "description": "Join thousands of golfers who are already improving with AI-powered analysis.",
+      "button": "Get Started Free",
+      "noCard": "No credit card required"
+    }
+  },
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "Start free, upgrade when you're ready",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "annualSave": "Save 17%",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "period": "forever",
+        "description": "Perfect for trying out",
+        "features": [
+          "3 analyses per month",
+          "Basic AI feedback",
+          "Manual data entry",
+          "7-day history"
+        ],
+        "cta": "Get Started"
+      },
+      "basic": {
+        "name": "Basic",
+        "price": "$9.99",
+        "period": "per month",
+        "description": "For serious golfers",
+        "features": [
+          "Unlimited analyses",
+          "Full AI insights",
+          "Photo OCR (50/month)",
+          "Unlimited history",
+          "Club statistics",
+          "Progress charts"
+        ],
+        "cta": "Start Basic",
+        "popular": "Most Popular"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$19.99",
+        "period": "per month",
+        "description": "Maximum improvement",
+        "features": [
+          "Everything in Basic",
+          "Unlimited OCR",
+          "Video swing analysis",
+          "AI Chat Coach",
+          "Goal tracking",
+          "Priority support"
+        ],
+        "cta": "Go Pro"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": {
+        "question": "Can I cancel anytime?",
+        "answer": "Yes, you can cancel your subscription at any time. No questions asked."
+      },
+      "q2": {
+        "question": "What launch monitors are supported?",
+        "answer": "We support TrackMan, FlightScope, GCQuad, Mevo, GolfZon, GDR, Kakao VX, and more."
+      },
+      "q3": {
+        "question": "How accurate is the OCR?",
+        "answer": "Our OCR accuracy is over 95% for supported devices. You can always edit the extracted data."
+      }
+    }
+  },
+  "analysis": {
+    "dashboard": {
+      "title": "My Analysis",
+      "welcome": "Welcome back, {name}!",
+      "improving": "Your swing is improving!",
+      "newAnalysis": "New Analysis",
+      "recentSessions": "Recent Sessions",
+      "noSessions": "No sessions yet. Start your first analysis!",
+      "viewAll": "View All"
+    },
+    "stats": {
+      "driverAvg": "Driver Avg",
+      "thisMonth": "This Month",
+      "sessions": "sessions",
+      "goal": "Goal Progress",
+      "improvement": "improvement"
+    },
+    "new": {
+      "title": "New Swing Analysis",
+      "step1": {
+        "title": "Choose Data Source",
+        "photo": "Upload Photo",
+        "photoDesc": "Take a picture of your screen",
+        "manual": "Manual Entry",
+        "manualDesc": "Enter data yourself",
+        "api": "Connect App",
+        "apiDesc": "Coming soon"
+      },
+      "step2": {
+        "title": "Select Launch Monitor",
+        "trackman": "TrackMan",
+        "golfzon": "GolfZon",
+        "gdr": "GDR",
+        "kakao": "Kakao VX",
+        "flightscope": "FlightScope",
+        "other": "Other"
+      },
+      "step3": {
+        "title": "Session Info",
+        "date": "Date",
+        "type": "Session Type",
+        "practice": "Practice",
+        "round": "Round",
+        "fitting": "Fitting",
+        "location": "Location (optional)"
+      },
+      "step4": {
+        "title": "Enter Shot Data",
+        "club": "Club",
+        "addShot": "Add Shot",
+        "shots": "shots entered"
+      },
+      "upload": {
+        "title": "Upload Photo",
+        "drag": "Drag & drop your screen photo here",
+        "or": "or click to select",
+        "supported": "Supported: JPG, PNG, HEIC",
+        "processing": "Processing image...",
+        "extracted": "Data extracted successfully!"
+      },
+      "analyze": "Analyze Now",
+      "analyzing": "Analyzing your swing...",
+      "freeLeft": "{count} free analyses left"
+    },
+    "result": {
+      "title": "Analysis Result",
+      "summary": "Summary",
+      "keyFindings": "Key Findings",
+      "strengths": "What's Working Well",
+      "improvements": "Areas to Improve",
+      "drills": "Recommended Drills",
+      "comparison": "Compared to Last Session",
+      "shareResult": "Share Result",
+      "newAnalysis": "New Analysis"
+    },
+    "clubs": {
+      "title": "Club Statistics",
+      "driver": "Driver",
+      "woods": "Fairway Woods",
+      "hybrids": "Hybrids",
+      "irons": "Irons",
+      "wedges": "Wedges",
+      "avgCarry": "Avg Carry",
+      "avgTotal": "Avg Total",
+      "avgBallSpeed": "Avg Ball Speed",
+      "consistency": "Consistency"
+    },
+    "history": {
+      "title": "Analysis History",
+      "filter": {
+        "all": "All",
+        "practice": "Practice",
+        "round": "Round"
+      },
+      "empty": "No analysis history yet"
+    }
+  },
+  "profile": {
+    "title": "Golf Profile",
+    "subtitle": "Help us personalize your analysis",
+    "physical": {
+      "title": "Physical Info",
+      "height": "Height",
+      "weight": "Weight",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "handedness": "Handedness",
+      "right": "Right-handed",
+      "left": "Left-handed"
+    },
+    "golf": {
+      "title": "Golf Info",
+      "handicap": "Handicap",
+      "experience": "Years Playing",
+      "swingSpeed": "Swing Speed",
+      "slow": "Slow (< 85 mph)",
+      "moderate": "Moderate (85-95 mph)",
+      "fast": "Fast (95-105 mph)",
+      "veryFast": "Very Fast (> 105 mph)",
+      "typicalMiss": "Typical Miss",
+      "slice": "Slice",
+      "hook": "Hook",
+      "fat": "Fat shots",
+      "thin": "Thin shots",
+      "top": "Top shots"
+    },
+    "goals": {
+      "title": "Goals",
+      "primaryGoal": "Primary Goal",
+      "distance": "More Distance",
+      "accuracy": "Better Accuracy",
+      "consistency": "More Consistency",
+      "targetHandicap": "Target Handicap"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "distanceUnit": "Distance Unit",
+      "yards": "Yards",
+      "meters": "Meters",
+      "speedUnit": "Speed Unit",
+      "mph": "mph",
+      "kmh": "km/h"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Golf Profile",
+    "subscription": "Subscription",
+    "notifications": "Notifications",
+    "language": "Language",
+    "deleteAccount": "Delete Account"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "currentPlan": "Current Plan",
+    "usage": "This Month's Usage",
+    "analyses": "Analyses",
+    "ocrScans": "OCR Scans",
+    "unlimited": "Unlimited",
+    "upgrade": "Upgrade Plan",
+    "cancel": "Cancel Subscription",
+    "billingHistory": "Billing History"
+  },
+  "units": {
+    "yards": "yards",
+    "meters": "meters",
+    "mph": "mph",
+    "kmh": "km/h",
+    "rpm": "rpm",
+    "degrees": "°"
+  },
+  "clubs": {
+    "driver": "Driver",
+    "3wood": "3 Wood",
+    "5wood": "5 Wood",
+    "hybrid": "Hybrid",
+    "3iron": "3 Iron",
+    "4iron": "4 Iron",
+    "5iron": "5 Iron",
+    "6iron": "6 Iron",
+    "7iron": "7 Iron",
+    "8iron": "8 Iron",
+    "9iron": "9 Iron",
+    "pw": "Pitching Wedge",
+    "gw": "Gap Wedge",
+    "sw": "Sand Wedge",
+    "lw": "Lob Wedge"
+  },
+  "shotData": {
+    "ballSpeed": "Ball Speed",
+    "clubSpeed": "Club Speed",
+    "launchAngle": "Launch Angle",
+    "spinRate": "Spin Rate",
+    "carry": "Carry",
+    "total": "Total",
+    "offline": "Offline",
+    "peakHeight": "Peak Height",
+    "landAngle": "Land Angle",
+    "smashFactor": "Smash Factor",
+    "attackAngle": "Attack Angle",
+    "clubPath": "Club Path",
+    "faceAngle": "Face Angle"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notFound": "Page not found",
+    "unauthorized": "Please sign in to continue",
+    "limitReached": "You've reached your monthly limit. Upgrade to continue.",
+    "ocrFailed": "Could not extract data from image. Please try again or enter manually.",
+    "analysisFailed": "Analysis failed. Please try again."
+  },
+  "footer": {
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal",
+    "about": "About",
+    "blog": "Blog",
+    "careers": "Careers",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact",
+    "copyright": "© {year} Golfearn. All rights reserved."
+  }
+}
