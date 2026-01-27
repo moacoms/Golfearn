@@ -276,51 +276,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">⛳</span>
-                <span className="text-xl font-bold text-white">Golfearn</span>
-              </div>
-              <p className="text-sm">
-                Your AI Golf Coach
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">{t('footer.product')}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href={`/${locale}/analysis`} className="hover:text-white transition">{t('nav.analysis')}</Link></li>
-                <li><Link href={`/${locale}/pricing`} className="hover:text-white transition">{t('nav.pricing')}</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">{t('footer.company')}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-white transition">{t('footer.about')}</Link></li>
-                <li><Link href="#" className="hover:text-white transition">{t('footer.blog')}</Link></li>
-                <li><Link href="#" className="hover:text-white transition">{t('footer.contact')}</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">{t('footer.legal')}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-white transition">{t('footer.privacy')}</Link></li>
-                <li><Link href="#" className="hover:text-white transition">{t('footer.terms')}</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            {t('footer.copyright', { year: new Date().getFullYear() })}
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

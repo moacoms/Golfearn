@@ -357,20 +357,6 @@ export default function PricingPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <span className="text-2xl">🏌️</span>
-              <span className="text-xl font-bold text-white">Golfearn</span>
-            </div>
-            <p className="text-sm">
-              {t('footer.copyright', { year: new Date().getFullYear() })}
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

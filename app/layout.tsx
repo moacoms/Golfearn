@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.golfearn.com'),
@@ -70,12 +68,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+      <body className="min-h-screen">
+        {children}
       </body>
     </html>
   )
