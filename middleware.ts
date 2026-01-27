@@ -7,7 +7,8 @@ import { locales, defaultLocale } from '@/lib/i18n/config'
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed', // 기본 언어는 URL에서 생략
+  localePrefix: 'always', // 항상 언어 접두사 표시
+  localeDetection: true, // 브라우저 언어 자동 감지
 })
 
 export async function middleware(request: NextRequest) {

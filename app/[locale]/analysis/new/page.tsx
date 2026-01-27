@@ -83,11 +83,41 @@ export default function NewAnalysisPage() {
 
     setIsAnalyzing(true)
 
-    // TODO: 실제 분석 API 호출
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const response = await fetch('/api/analysis/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionDate,
+          sessionType,
+          dataSource: launchMonitor || 'manual',
+          location,
+          shots,
+          locale,
+        }),
+      })
 
-    // 분석 완료 후 결과 페이지로 이동
-    router.push(`/${locale}/analysis/result-demo`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.code === 'LIMIT_REACHED') {
+          alert(t('errors.limitReached'))
+        } else {
+          alert(result.error || t('errors.analysisFailed'))
+        }
+        setIsAnalyzing(false)
+        return
+      }
+
+      // 분석 완료 후 결과 페이지로 이동
+      router.push(`/${locale}/analysis/${result.sessionId}`)
+    } catch (error) {
+      console.error('Analysis error:', error)
+      alert(t('errors.analysisFailed'))
+      setIsAnalyzing(false)
+    }
   }
 
   const clubs: { value: ClubType; label: string }[] = [
