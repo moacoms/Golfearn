@@ -1,25 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
+import { createClient } from '@/lib/supabase/client'
 
 type DataSource = 'photo' | 'manual' | 'api'
 type LaunchMonitor = 'trackman' | 'golfzon' | 'gdr' | 'kakao' | 'flightscope' | 'other'
 type SessionType = 'practice' | 'round' | 'fitting'
 type ClubType = 'driver' | '3wood' | '5wood' | 'hybrid' | '5iron' | '6iron' | '7iron' | '8iron' | '9iron' | 'pw' | 'gw' | 'sw' | 'lw'
 
+type DistanceUnit = 'yards' | 'meters'
+type SpeedUnit = 'mph' | 'ms'
+
 interface ShotData {
   id: string
   clubType: ClubType
   ballSpeed?: number
   clubSpeed?: number
+  smashFactor?: number
   launchAngle?: number
+  attackAngle?: number
+  clubPath?: number
+  faceAngle?: number
   spinRate?: number
   carry?: number
   total?: number
+  offline?: number
 }
 
 export default function NewAnalysisPage() {
@@ -27,6 +35,21 @@ export default function NewAnalysisPage() {
   const params = useParams()
   const router = useRouter()
   const locale = params.locale as string
+
+  const [authChecking, setAuthChecking] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.replace(`/${locale}/login?redirect=/${locale}/analysis/new`)
+        return
+      }
+      setAuthChecking(false)
+    }
+    checkAuth()
+  }, [locale, router])
 
   const [step, setStep] = useState(1)
   const [dataSource, setDataSource] = useState<DataSource | null>(null)
@@ -37,14 +60,21 @@ export default function NewAnalysisPage() {
   const [shots, setShots] = useState<ShotData[]>([])
   const [currentClub, setCurrentClub] = useState<ClubType>('driver')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>('yards')
+  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>('mph')
 
   const [currentShot, setCurrentShot] = useState({
     ballSpeed: '',
     clubSpeed: '',
+    smashFactor: '',
     launchAngle: '',
+    attackAngle: '',
+    clubPath: '',
+    faceAngle: '',
     spinRate: '',
     carry: '',
     total: '',
+    offline: '',
   })
 
   const freeAnalysesLeft = 2 // TODO: 실제 값 가져오기
@@ -57,20 +87,30 @@ export default function NewAnalysisPage() {
       clubType: currentClub,
       ballSpeed: currentShot.ballSpeed ? parseFloat(currentShot.ballSpeed) : undefined,
       clubSpeed: currentShot.clubSpeed ? parseFloat(currentShot.clubSpeed) : undefined,
+      smashFactor: currentShot.smashFactor ? parseFloat(currentShot.smashFactor) : undefined,
       launchAngle: currentShot.launchAngle ? parseFloat(currentShot.launchAngle) : undefined,
+      attackAngle: currentShot.attackAngle ? parseFloat(currentShot.attackAngle) : undefined,
+      clubPath: currentShot.clubPath ? parseFloat(currentShot.clubPath) : undefined,
+      faceAngle: currentShot.faceAngle ? parseFloat(currentShot.faceAngle) : undefined,
       spinRate: currentShot.spinRate ? parseInt(currentShot.spinRate) : undefined,
       carry: parseFloat(currentShot.carry),
       total: currentShot.total ? parseFloat(currentShot.total) : undefined,
+      offline: currentShot.offline ? parseFloat(currentShot.offline) : undefined,
     }
 
     setShots([...shots, newShot])
     setCurrentShot({
       ballSpeed: '',
       clubSpeed: '',
+      smashFactor: '',
       launchAngle: '',
+      attackAngle: '',
+      clubPath: '',
+      faceAngle: '',
       spinRate: '',
       carry: '',
       total: '',
+      offline: '',
     })
   }
 
@@ -96,6 +136,7 @@ export default function NewAnalysisPage() {
           location,
           shots,
           locale,
+          units: { distance: distanceUnit, speed: speedUnit },
         }),
       })
 
@@ -136,28 +177,22 @@ export default function NewAnalysisPage() {
     { value: 'lw', label: t('clubs.lw') },
   ]
 
+  if (authChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-12 h-12 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-green-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-gray-500 text-sm">{t('common.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href={`/${locale}/analysis`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t('common.back')}
-            </Link>
-
-            <h1 className="text-lg font-semibold text-gray-900">
-              {t('analysis.new.title')}
-            </h1>
-
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
-
       {/* Progress Steps */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -394,42 +429,143 @@ export default function NewAnalysisPage() {
                 </select>
               </div>
 
+              {/* Unit Settings */}
+              <div className="flex flex-wrap gap-4 mb-6 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">
+                    {locale === 'ko' ? '거리' : 'Distance'}:
+                  </span>
+                  <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                    <button
+                      type="button"
+                      onClick={() => setDistanceUnit('yards')}
+                      className={`px-3 py-1 text-xs font-medium transition ${distanceUnit === 'yards' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      Yards
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDistanceUnit('meters')}
+                      className={`px-3 py-1 text-xs font-medium transition ${distanceUnit === 'meters' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      Meters
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">
+                    {locale === 'ko' ? '속도' : 'Speed'}:
+                  </span>
+                  <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                    <button
+                      type="button"
+                      onClick={() => setSpeedUnit('mph')}
+                      className={`px-3 py-1 text-xs font-medium transition ${speedUnit === 'mph' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      mph
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSpeedUnit('ms')}
+                      className={`px-3 py-1 text-xs font-medium transition ${speedUnit === 'ms' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      m/s
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Shot Data Inputs */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.ballSpeed')} (mph)
+                    {t('shotData.ballSpeed')} ({speedUnit === 'mph' ? 'mph' : 'm/s'})
                   </label>
                   <input
                     type="number"
+                    step="0.1"
                     value={currentShot.ballSpeed}
                     onChange={(e) => setCurrentShot({ ...currentShot, ballSpeed: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="165"
+                    placeholder={speedUnit === 'mph' ? '165' : '73.8'}
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.clubSpeed')} (mph)
+                    {t('shotData.clubSpeed')} ({speedUnit === 'mph' ? 'mph' : 'm/s'})
                   </label>
                   <input
                     type="number"
+                    step="0.1"
                     value={currentShot.clubSpeed}
                     onChange={(e) => setCurrentShot({ ...currentShot, clubSpeed: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="110"
+                    placeholder={speedUnit === 'mph' ? '110' : '49.2'}
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.launchAngle')} (°)
+                    {t('shotData.smashFactor')}
                   </label>
                   <input
                     type="number"
+                    step="0.01"
+                    value={currentShot.smashFactor}
+                    onChange={(e) => setCurrentShot({ ...currentShot, smashFactor: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="1.50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('shotData.launchAngle')} ({'\u00B0'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
                     value={currentShot.launchAngle}
                     onChange={(e) => setCurrentShot({ ...currentShot, launchAngle: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     placeholder="12.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('shotData.attackAngle')} ({'\u00B0'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={currentShot.attackAngle}
+                    onChange={(e) => setCurrentShot({ ...currentShot, attackAngle: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="-1.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('shotData.clubPath')} ({'\u00B0'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={currentShot.clubPath}
+                    onChange={(e) => setCurrentShot({ ...currentShot, clubPath: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="2.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('shotData.faceAngle')} ({'\u00B0'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={currentShot.faceAngle}
+                    onChange={(e) => setCurrentShot({ ...currentShot, faceAngle: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="1.0"
                   />
                 </div>
                 <div>
@@ -446,27 +582,42 @@ export default function NewAnalysisPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.carry')} (yards) *
+                    {t('shotData.carry')} ({distanceUnit === 'yards' ? 'yds' : 'm'}) *
                   </label>
                   <input
                     type="number"
+                    step="0.1"
                     value={currentShot.carry}
                     onChange={(e) => setCurrentShot({ ...currentShot, carry: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="245"
+                    placeholder={distanceUnit === 'yards' ? '245' : '224'}
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.total')} (yards)
+                    {t('shotData.total')} ({distanceUnit === 'yards' ? 'yds' : 'm'})
                   </label>
                   <input
                     type="number"
+                    step="0.1"
                     value={currentShot.total}
                     onChange={(e) => setCurrentShot({ ...currentShot, total: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="265"
+                    placeholder={distanceUnit === 'yards' ? '265' : '242'}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    {t('shotData.offline')} ({distanceUnit === 'yards' ? 'yds' : 'm'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={currentShot.offline}
+                    onChange={(e) => setCurrentShot({ ...currentShot, offline: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="5.0"
                   />
                 </div>
               </div>
@@ -497,11 +648,11 @@ export default function NewAnalysisPage() {
                             {clubs.find((c) => c.value === shot.clubType)?.label}
                           </span>
                           <span className="text-sm text-gray-600">
-                            {shot.carry} yds
+                            {shot.carry} {distanceUnit === 'yards' ? 'yds' : 'm'}
                           </span>
                           {shot.ballSpeed && (
                             <span className="text-sm text-gray-400">
-                              {shot.ballSpeed} mph
+                              {shot.ballSpeed} {speedUnit === 'mph' ? 'mph' : 'm/s'}
                             </span>
                           )}
                         </div>

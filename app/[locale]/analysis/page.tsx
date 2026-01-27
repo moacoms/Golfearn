@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
 
 interface Session {
   id: string
@@ -134,48 +133,6 @@ export default function AnalysisDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-gray-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href={`/${locale}`} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="5" r="3" />
-                  <path d="M12 8c-1 0-2 .5-2.5 1.5L7 16h3l1 6h2l1-6h3l-2.5-6.5C14 8.5 13 8 12 8z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Golfearn</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href={`/${locale}/analysis`} className="text-green-600 font-semibold border-b-2 border-green-600 pb-1">
-                {t('nav.analysis')}
-              </Link>
-              <Link href={`/${locale}/pricing`} className="text-gray-500 hover:text-gray-900 transition">
-                {t('nav.pricing')}
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <LanguageSwitcher />
-              {isLoggedIn ? (
-                <div className="w-9 h-9 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-sm">
-                  <span className="text-white font-semibold text-sm">{userName[0]?.toUpperCase()}</span>
-                </div>
-              ) : (
-                <Link
-                  href={`/${locale}/login`}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium"
-                >
-                  {t('common.signIn')}
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!isLoggedIn ? (
           /* ===== 비로그인: 히어로 섹션 ===== */

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
 
 export default function PricingPage() {
   const t = useTranslations()
@@ -96,46 +95,6 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href={`/${locale}`} className="flex items-center gap-2">
-              <span className="text-2xl">🏌️</span>
-              <span className="text-xl font-bold text-gray-900">Golfearn</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href={`/${locale}`} className="text-gray-600 hover:text-gray-900">
-                {t('nav.home')}
-              </Link>
-              <Link href={`/${locale}/analysis`} className="text-gray-600 hover:text-gray-900">
-                {t('nav.analysis')}
-              </Link>
-              <Link href={`/${locale}/pricing`} className="text-green-600 font-medium">
-                {t('nav.pricing')}
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher />
-              <Link
-                href={`/${locale}/login`}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                {t('common.signIn')}
-              </Link>
-              <Link
-                href={`/${locale}/signup`}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-              >
-                {t('common.signUp')}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main>
         {/* Hero */}
         <section className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">

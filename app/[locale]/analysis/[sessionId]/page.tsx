@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
 import ReactMarkdown from 'react-markdown'
+
 
 interface SessionData {
   id: string
@@ -146,26 +146,6 @@ export default function AnalysisResultPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href={`/${locale}/analysis`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t('common.back')}
-            </Link>
-
-            <h1 className="text-lg font-semibold text-gray-900">
-              {t('analysis.result.title')}
-            </h1>
-
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Session Info Card */}
         <div className="bg-white rounded-xl p-6 shadow-sm mb-6">

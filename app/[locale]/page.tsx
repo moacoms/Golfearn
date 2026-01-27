@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher'
 
 export default function LandingPage() {
   const t = useTranslations()
@@ -12,45 +11,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href={`/${locale}`} className="flex items-center gap-2">
-              <span className="text-2xl">⛳</span>
-              <span className="text-xl font-bold text-gray-900">Golfearn</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href={`/${locale}/analysis`} className="text-gray-600 hover:text-gray-900 transition">
-                {t('nav.analysis')}
-              </Link>
-              <Link href={`/${locale}/pricing`} className="text-gray-600 hover:text-gray-900 transition">
-                {t('nav.pricing')}
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher />
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 transition hidden sm:block"
-              >
-                {t('common.signIn')}
-              </Link>
-              <Link
-                href={`/${locale}/analysis/new`}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
-              >
-                {t('landing.hero.cta')}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-12 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
             {t('landing.hero.title')}

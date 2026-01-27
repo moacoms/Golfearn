@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { locales, type Locale } from '@/lib/i18n/config'
 import Link from 'next/link'
+import LocaleHeader from '@/components/i18n/LocaleHeader'
 import '@/app/globals.css'
 
 export function generateStaticParams() {
@@ -94,6 +95,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="flex flex-col min-h-screen bg-gray-50">
         <NextIntlClientProvider messages={messages}>
+          <LocaleHeader />
           <div className="flex-grow">
             {children}
           </div>
