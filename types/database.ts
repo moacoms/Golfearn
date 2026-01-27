@@ -463,3 +463,194 @@ export interface ParticipantWithProfile extends JoinParticipant {
     golf_started_at: string | null
   } | null
 }
+
+// =============================================
+// Golf Analysis Types (2026-01-26)
+// =============================================
+
+// 사용자 골프 프로필
+export interface UserGolfProfile {
+  id: string
+  user_id: string
+  height_cm: number | null
+  weight_kg: number | null
+  gender: 'male' | 'female' | 'other' | null
+  handedness: 'right' | 'left'
+  handicap: number | null
+  experience_years: number | null
+  swing_speed_level: 'slow' | 'moderate' | 'fast' | 'very_fast' | null
+  typical_miss: string | null
+  primary_goal: string | null
+  target_handicap: number | null
+  distance_unit: 'yards' | 'meters'
+  speed_unit: 'mph' | 'kmh'
+  preferred_language: string
+  created_at: string
+  updated_at: string
+}
+
+// 스윙 세션
+export interface SwingSession {
+  id: string
+  user_id: string
+  session_date: string
+  session_type: 'practice' | 'round' | 'fitting'
+  location_name: string | null
+  data_source: string
+  weather_condition: string | null
+  temperature_celsius: number | null
+  notes: string | null
+  analysis_status: 'pending' | 'analyzing' | 'completed' | 'failed'
+  analysis_credits_used: number
+  created_at: string
+  updated_at: string
+  // Relations
+  swing_analyses?: SwingAnalysis[]
+  shot_data?: ShotData[]
+}
+
+// 개별 샷 데이터
+export interface ShotData {
+  id: string
+  session_id: string
+  user_id: string
+  club_type: string
+  club_name: string | null
+  carry_distance: number | null
+  total_distance: number | null
+  offline_distance: number | null
+  ball_speed_mph: number | null
+  launch_angle: number | null
+  peak_height: number | null
+  land_angle: number | null
+  back_spin_rpm: number | null
+  side_spin_rpm: number | null
+  spin_axis: number | null
+  club_speed_mph: number | null
+  attack_angle: number | null
+  club_path: number | null
+  face_angle: number | null
+  face_to_path: number | null
+  dynamic_loft: number | null
+  smash_factor: number | null
+  impact_location: string | null
+  shot_result: string | null
+  shot_quality: number | null
+  ocr_raw_data: Json | null
+  ocr_image_url: string | null
+  created_at: string
+}
+
+// AI 분석 결과
+export interface SwingAnalysis {
+  id: string
+  session_id: string
+  user_id: string
+  analysis_type: 'session' | 'weekly' | 'monthly' | 'club_specific'
+  club_type: string | null
+  summary: string
+  strengths: Json | null
+  weaknesses: Json | null
+  recommendations: Json | null
+  distance_analysis: Json | null
+  accuracy_analysis: Json | null
+  consistency_analysis: Json | null
+  spin_analysis: Json | null
+  comparison_to_previous: Json | null
+  comparison_to_average: Json | null
+  comparison_to_peers: Json | null
+  drill_recommendations: Json | null
+  focus_areas: Json | null
+  ai_model_version: string | null
+  analysis_language: string | null
+  tokens_used: number | null
+  created_at: string
+}
+
+// 목표
+export interface SwingGoal {
+  id: string
+  user_id: string
+  goal_type: string
+  club_type: string | null
+  target_value: number
+  current_value: number | null
+  start_value: number | null
+  start_date: string
+  target_date: string
+  status: 'active' | 'achieved' | 'failed' | 'cancelled'
+  achieved_at: string | null
+  progress_percentage: number
+  created_at: string
+  updated_at: string
+}
+
+// 구독 정보
+export interface Subscription {
+  id: string
+  user_id: string
+  lemon_squeezy_customer_id: string | null
+  lemon_squeezy_subscription_id: string | null
+  lemon_squeezy_order_id: string | null
+  plan_type: 'free' | 'basic' | 'pro' | 'annual'
+  status: 'active' | 'cancelled' | 'past_due' | 'expired'
+  current_period_start: string | null
+  current_period_end: string | null
+  cancelled_at: string | null
+  monthly_analysis_count: number
+  monthly_analysis_limit: number
+  monthly_ocr_count: number
+  monthly_ocr_limit: number
+  currency: string
+  price_paid: number | null
+  created_at: string
+  updated_at: string
+}
+
+// 사용량 로그
+export interface UsageLog {
+  id: string
+  user_id: string
+  usage_type: 'analysis' | 'ocr' | 'ai_chat'
+  session_id: string | null
+  tokens_used: number | null
+  success: boolean
+  error_message: string | null
+  created_at: string
+}
+
+// 클럽별 통계
+export interface ClubStatistics {
+  id: string
+  user_id: string
+  club_type: string
+  total_shots: number
+  avg_carry: number | null
+  avg_total: number | null
+  avg_ball_speed: number | null
+  avg_club_speed: number | null
+  avg_launch_angle: number | null
+  avg_back_spin: number | null
+  avg_smash_factor: number | null
+  carry_std_dev: number | null
+  offline_std_dev: number | null
+  max_carry: number | null
+  max_ball_speed: number | null
+  last_updated: string
+}
+
+// 다국어 콘텐츠
+export interface LocalizedContent {
+  id: string
+  content_key: string
+  content_type: 'drill' | 'tip' | 'feedback_template'
+  content_en: string
+  content_ko: string | null
+  content_ja: string | null
+  content_zh: string | null
+  category: string | null
+  tags: string[] | null
+  video_url: string | null
+  created_at: string
+  updated_at: string
+}
