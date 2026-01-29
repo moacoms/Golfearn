@@ -439,9 +439,53 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2026-01-20 업데이트)
+## 매일 마무리 규칙
+
+**세션 종료 시 반드시 아래 작업을 수행할 것:**
+
+1. **작업 요약 문서 생성**: `docs/YYYY-MM-DD-work-summary.md` 형식으로 저장
+   - 핵심 작업 내용, 커밋 이력, 생성/수정된 파일 목록
+   - 현재 MVP 완성도 상태 표시
+   - 내일 할 일 우선순위 정리
+2. **CLAUDE.md 업데이트**: 개발 진행 현황 섹션에 해당 날짜 작업 반영
+3. **커밋 & 푸시**: 작업 요약 문서 + CLAUDE.md 변경사항을 커밋하고 원격에 푸시
+
+---
+
+## 개발 진행 현황 (2026-01-29 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 1월 5주차 (랜딩/가격/차트/히스토리 + 라우팅 수정) - 2026-01-29
+
+44. **OCR API 엔드포인트**
+    - `app/api/analysis/ocr/route.ts` - Claude Vision 기반 론치모니터 OCR
+    - TrackMan/GolfZon/GDR/Kakao VX/FlightScope 지원
+    - 구독 플랜별 월간 OCR 쿼터 제한
+    - 다국어 OCR 메시지 15개 추가 (`messages/en.json`, `ko.json`)
+
+45. **랜딩페이지 전면 리디자인**
+    - 8개 섹션: Hero(모의 분석 프리뷰), Social Proof, How It Works, Comparison, Testimonials, Pricing Preview, FAQ, CTA
+    - Hero에 좌우 2컬럼 레이아웃 + AI 분석 미리보기 카드
+    - FAQ 아코디언 5개 (보안/론치모니터 2개 추가)
+
+46. **가격 페이지 개선**
+    - `t.raw()` 활용 번역 키에서 features 배열 직접 사용
+    - 월간/연간 pill 토글 UI, 기능 비교 테이블 개선
+
+47. **Recharts 차트 컴포넌트**
+    - `components/analysis/ClubDistanceChart.tsx` - 클럽별 거리 바 차트
+    - `components/analysis/ProgressChart.tsx` - 발전 추이 라인 차트 (캐리/볼스피드/스핀 전환)
+
+48. **히스토리 페이지**
+    - `app/[locale]/analysis/history/page.tsx`
+    - 세션 목록 탭 (필터: 전체/연습/라운드)
+    - 차트 분석 탭 (ClubDistanceChart + ProgressChart)
+
+49. **레거시 경로 라우팅 버그 수정**
+    - `/ko/mypage` 등 locale prefix + 레거시 경로 404 해결
+    - `legacyPaths`에 `/mypage`, `/guide`, `/golf-courses`, `/admin`, `/login`, `/signup` 추가
+    - locale prefix 레거시 경로 자동 리다이렉트 (`/ko/mypage` → `/mypage`)
 
 #### 1월 4주차 (클럽 자동 업데이트 + 관리자 시스템) - 2026-01-20
 
@@ -749,11 +793,157 @@ Supabase Dashboard → SQL Editor에서 아래 "데이터베이스 스키마" �
 26. [x] 관리자 아이콘 (헤더)
 27. [x] 헤더에 연습장/골프장 메뉴 추가
 
-### 📋 진행 예정
-28. [ ] TypeScript 타입 재생성 (Supabase)
-29. [ ] 레슨프로 기능 고도화
-30. [ ] Vercel 환경변수 설정 (ANTHROPIC_API_KEY, CRON_SECRET)
-31. [ ] 프리미엄 멤버십 결제 연동
+### 📋 진행 예정 (레거시 - 보류)
+~~28. [ ] TypeScript 타입 재생성 (Supabase)~~
+~~29. [ ] 레슨프로 기능 고도화~~
+~~30. [ ] Vercel 환경변수 설정 (ANTHROPIC_API_KEY, CRON_SECRET)~~
+~~31. [ ] 프리미엄 멤버십 결제 연동~~
+
+---
+
+## 🚀 전략적 피벗 (2026-01-26)
+
+### 배경
+기존 기능(조인 매칭, 중고거래, 레슨프로 등)은 네트워크 효과가 필요하여 초기 유저 확보 및 수익화가 어려움.
+**AI 골프 스윙 분석** 기능으로 피벗하여 개인에게 즉각적 가치를 제공하고 글로벌 확장 추진.
+
+### 새로운 비전
+```
+Before: Golfearn (한국 골린이 커뮤니티)
+After:  Golfearn (Global Golf Swing Analytics AI)
+
+슬로건: "Your AI Golf Coach - Analyze, Improve, Track"
+한글: "AI가 분석하는 나만의 골프 코치"
+```
+
+### 핵심 기능: 나의골프분석 (My Golf Analysis)
+
+**데이터 입력 방식:**
+| 방식 | 설명 | 기술 |
+|------|------|------|
+| 📸 사진 업로드 | 결과 화면 촬영 → OCR 추출 | Google Vision API |
+| 📋 직접 입력 | 폼에 수치 직접 입력 | 기본 폼 |
+| 🔗 API 연동 | 골프존/카카오 등 (추후) | OAuth + API |
+
+**지원 론치모니터:**
+- TrackMan, FlightScope, GCQuad
+- 골프존, GDR, 카카오VX
+
+**분석 데이터:**
+- 드라이버: 볼스피드, 헤드스피드, 캐리/토탈, 발사각, 백스핀, 페이스앵글, 클럽패스 등
+- 아이언: 클럽별 거리 일관성, 탄도, 스핀량
+
+**AI 피드백:**
+- 20년 경력 레슨프로 페르소나
+- 문제점 근본 원인 분석
+- 맞춤 드릴 추천
+- 이전 세션 대비 발전 추적
+
+### 글로벌 확장 전략
+
+**다국어 지원:**
+- Phase 1: 🇺🇸 English (기본) + 🇰🇷 한국어
+- Phase 2: 🇯🇵 日本語
+- Phase 3: 🇨🇳 中文 + 🇩🇪 Deutsch
+
+**결제 시스템:** Lemon Squeezy (MoR - 세금 자동 처리)
+
+**가격 정책:**
+| Plan | USD | KRW |
+|------|-----|-----|
+| Free | $0 | 0원 |
+| Basic | $9.99/mo | 12,900원/mo |
+| Pro | $19.99/mo | 24,900원/mo |
+| Annual | $99/yr | 129,000원/yr |
+
+### 기존 기능 처리
+```
+/community, /market, /join, /lesson-pro, /practice-range
+  → 한국어 사용자에게만 조건부 표시
+  → 신규 기능 안정화 후 점진적 숨김 처리
+```
+
+### 신규 URL 구조
+```
+/[locale]/                    # 새 랜딩페이지
+/[locale]/analysis            # 분석 대시보드
+/[locale]/analysis/new        # 새 분석 시작
+/[locale]/analysis/[sessionId] # 세션 상세
+/[locale]/analysis/history    # 히스토리
+/[locale]/pricing             # 가격
+```
+
+### 기술 스택 추가
+```yaml
+다국어: next-intl
+OCR: Google Cloud Vision API
+AI: Claude API (Anthropic)
+결제: Lemon Squeezy
+차트: Recharts
+```
+
+### 새로운 DB 테이블
+- `user_golf_profiles` - 사용자 골프 프로필
+- `swing_sessions` - 연습/라운드 세션
+- `shot_data` - 개별 샷 데이터
+- `swing_analyses` - AI 분석 결과
+- `swing_goals` - 목표 관리
+- `subscriptions` - 구독 관리
+- `usage_logs` - 사용량 로그
+- `club_statistics` - 클럽별 통계 (캐시)
+- `localized_content` - 다국어 콘텐츠
+
+**마이그레이션:** `supabase/migrations/20260126_add_golf_analysis.sql`
+
+### MVP 개발 로드맵
+
+**Week 1-2: 핵심 기능**
+- [ ] next-intl 다국어 설정
+- [ ] 새 DB 마이그레이션 적용
+- [ ] 새 랜딩페이지 (영어/한국어)
+- [ ] 수동 데이터 입력 폼
+- [ ] AI 분석 엔진 (Claude API)
+- [ ] 분석 대시보드
+
+**Week 3-4: OCR & 결제**
+- [ ] Google Vision OCR 연동
+- [ ] TrackMan/골프존 파서
+- [ ] Lemon Squeezy 결제 연동
+- [ ] 구독 관리 UI
+- [ ] QA & 런칭
+
+**Week 5-8: 고도화**
+- [ ] 일본어/중국어 추가
+- [ ] 목표 관리 기능
+- [ ] 영상 분석 (Pro)
+- [ ] AI 채팅 코치
+
+### 성공 지표 (KPIs)
+
+| 지표 | Month 1 | Month 3 |
+|------|---------|---------|
+| 가입자 수 | 100 | 500 |
+| 유료 전환율 | 5% | 10% |
+| MRR | $50 | $500 |
+| 분석 수/사용자 | 3 | 8 |
+
+### 환경 변수 추가
+```env
+# AI
+ANTHROPIC_API_KEY=
+
+# OCR
+GOOGLE_CLOUD_PROJECT_ID=
+GOOGLE_CLOUD_PRIVATE_KEY=
+GOOGLE_CLOUD_CLIENT_EMAIL=
+
+# Lemon Squeezy
+LEMON_SQUEEZY_API_KEY=
+LEMON_SQUEEZY_STORE_ID=
+LEMON_SQUEEZY_WEBHOOK_SECRET=
+```
+
+**상세 기획서:** `docs/MY_GOLF_ANALYSIS_PLAN.md`
 
 ---
 
