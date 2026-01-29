@@ -27,15 +27,20 @@
   },
   "landing": {
     "hero": {
+      "badge": "AI-Powered Golf Analysis",
       "title": "Your AI Golf Coach",
       "subtitle": "Analyze. Improve. Track.",
       "description": "Upload your launch monitor data and get professional-level swing analysis instantly. No expensive lessons needed.",
       "cta": "Start Free Analysis",
+      "viewPricing": "View Pricing",
       "watchDemo": "Watch Demo",
-      "supportedDevices": "Works with TrackMan, GolfZon, GDR, Kakao VX & more"
+      "supportedDevices": "Works with TrackMan, GolfZon, GDR, Kakao VX & more",
+      "mockFeedback": "Your driver launch angle of 12.3° is slightly low for your swing speed. Increasing it to 14-15° could add 8-12 yards of carry. Try teeing the ball slightly higher.",
+      "yardGain": "yards gained in 2 months"
     },
     "features": {
       "title": "How It Works",
+      "subtitle": "From raw data to actionable insights in under 60 seconds",
       "upload": {
         "title": "Upload Data",
         "description": "Take a photo of your launch monitor screen or enter data manually"
@@ -61,6 +66,7 @@
     },
     "testimonials": {
       "title": "What Golfers Say",
+      "subtitle": "Real results from real golfers",
       "testimonial1": {
         "text": "I improved my driver distance by 15 yards in just 2 months using Golfearn AI. The feedback is incredibly detailed.",
         "author": "John K.",
@@ -79,6 +85,7 @@
     },
     "comparison": {
       "title": "Why Golfearn?",
+      "subtitle": "See how AI-powered analysis compares to traditional golf lessons",
       "traditional": "Traditional Lessons",
       "golfearn": "Golfearn AI",
       "price": {
@@ -173,6 +180,14 @@
       "q3": {
         "question": "How accurate is the OCR?",
         "answer": "Our OCR accuracy is over 95% for supported devices. You can always edit the extracted data."
+      },
+      "q4": {
+        "question": "Is my data secure?",
+        "answer": "Absolutely. Your data is encrypted at rest and in transit. We never share your personal data with third parties."
+      },
+      "q5": {
+        "question": "Do I need a launch monitor?",
+        "answer": "While OCR works best with a launch monitor photo, you can also enter your data manually from any source, including range session notes."
       }
     }
   },
