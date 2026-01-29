@@ -32,12 +32,28 @@ export async function middleware(request: NextRequest) {
   }
 
   // 기존 한국어 전용 페이지 처리 (레거시)
-  const legacyKoreanPaths = ['/community', '/market', '/join', '/lesson-pro', '/practice-range', '/club-catalog', '/club-recommend']
-  const isLegacyPath = legacyKoreanPaths.some(p => pathname.startsWith(p))
+  const legacyPaths = [
+    '/community', '/market', '/join', '/lesson-pro', '/practice-range',
+    '/club-catalog', '/club-recommend', '/mypage', '/guide', '/golf-courses',
+    '/admin', '/login', '/signup',
+  ]
 
+  // 직접 레거시 경로 접근 (예: /mypage)
+  const isLegacyPath = legacyPaths.some(p => pathname.startsWith(p))
   if (isLegacyPath) {
-    // 레거시 경로는 기존 로직 유지
     return await updateSession(request)
+  }
+
+  // locale prefix가 붙은 레거시 경로 리다이렉트 (예: /ko/mypage → /mypage)
+  const localePrefix = locales.find(l => pathname.startsWith(`/${l}/`))
+  if (localePrefix) {
+    const pathWithoutLocale = pathname.slice(`/${localePrefix}`.length)
+    const isLocalePrefixedLegacy = legacyPaths.some(p => pathWithoutLocale.startsWith(p))
+    if (isLocalePrefixedLegacy) {
+      const url = request.nextUrl.clone()
+      url.pathname = pathWithoutLocale
+      return NextResponse.redirect(url)
+    }
   }
 
   // 다국어 처리
