@@ -359,6 +359,18 @@
     "language": "Language",
     "deleteAccount": "Delete Account"
   },
+  "checkout": {
+    "processing": "Processing...",
+    "currentPlan": "Current Plan",
+    "downgrade": "Downgrade",
+    "success": {
+      "title": "Subscription Activated!",
+      "description": "Your plan has been activated. Start analyzing your swing now.",
+      "cta": "Start Analysis",
+      "dashboard": "Go to Dashboard",
+      "emailNotice": "A confirmation email has been sent to your inbox."
+    }
+  },
   "subscription": {
     "title": "Subscription",
     "currentPlan": "Current Plan",
@@ -368,6 +380,12 @@
     "unlimited": "Unlimited",
     "upgrade": "Upgrade Plan",
     "cancel": "Cancel Subscription",
+    "cancelConfirm": "Cancel your subscription?",
+    "cancelDescription": "You'll keep access until the end of your current billing period. You can resume anytime.",
+    "confirmCancel": "Yes, Cancel",
+    "changePlan": "Change Plan",
+    "manage": "Manage Billing",
+    "nextBilling": "Next billing date",
     "billingHistory": "Billing History"
   },
   "units": {

@@ -452,9 +452,44 @@ npx supabase gen types typescript --local > types/database.ts
 
 ---
 
-## 개발 진행 현황 (2026-01-29 업데이트)
+## 개발 진행 현황 (2026-02-08 업데이트)
 
 ### ✅ 완료된 작업
+
+#### 2월 2주차 (Lemon Squeezy 결제 연동) - 2026-02-08
+
+50. **Lemon Squeezy 결제 시스템 코드 완성**
+    - `lib/lemonsqueezy.ts` - API 클라이언트 (체크아웃, 구독 관리, 고객 포털)
+    - `app/api/checkout/route.ts` - 체크아웃 세션 생성
+    - `app/api/webhooks/lemonsqueezy/route.ts` - 웹훅 처리 (6개 이벤트)
+    - `app/api/subscription/cancel/route.ts` - 구독 취소 API
+    - `app/api/subscription/portal/route.ts` - 고객 포털 URL API
+
+51. **결제 성공 페이지**
+    - `app/[locale]/checkout/success/page.tsx`
+    - 결제 완료 후 리다이렉트, CTA 버튼
+
+52. **구독 관리 페이지**
+    - `app/[locale]/mypage/subscription/page.tsx`
+    - 현재 플랜/상태 표시 (Free/Basic/Pro, 활성/취소/만료)
+    - 사용량 프로그레스 바 (분석 횟수, OCR 스캔)
+    - 결제 관리 버튼 → Lemon Squeezy 포털
+    - 구독 취소 모달
+
+53. **가격 페이지 결제 버튼 연동**
+    - `handleCheckout()` → `/api/checkout` 호출
+    - 현재 플랜 표시 (Current Plan 뱃지)
+    - 로그인 안 된 경우 → 로그인 페이지로 리다이렉트
+
+54. **Lemon Squeezy 스토어 설정 시작**
+    - Store URL: `golfearn` (https://golfearn.lemonsqueezy.com)
+    - 언어: English
+    - 은행 계좌 연결: 보류 (Payoneer 또는 대형 은행 필요)
+
+**미완료:**
+- 환경변수 설정 (API Key, Store ID, Variant ID)
+- 4개 상품 생성 (Basic/Pro × Monthly/Annual)
+- 실제 결제 테스트
 
 #### 1월 5주차 (랜딩/가격/차트/히스토리 + 라우팅 수정) - 2026-01-29
 
@@ -1213,3 +1248,6 @@ IW = (K + U + W + C + A) × H × E
 3. 다양한 관점: 서로 다른 배경을 가진 사람들과 함께 공식을 적용해보세요.
 4. 실험적 태도: 공식을 기계적으로 따르기보다는 창의적으로 변형하여 사용하세요.
 5. 균형적 접근: 분석적 사고와 직관적 사고를 균형 있게 활용하세요.
+
+## 좋은 소식 기존 개발 해준 업체 중 골프용픔 유통 업체와 협업 진행 유무 확인
+- https://mwd.kr/ 사이트의 업체 중 팀장급 직원에게 문의 좋은 콜라보가 있다면 진행 가능하다고 답변 받았음.(제품관련 판매하여 수입 발생 가능할듯)

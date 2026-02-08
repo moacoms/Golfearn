@@ -1,16 +1,84 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function PricingPage() {
   const t = useTranslations()
   const params = useParams()
+  const router = useRouter()
   const locale = params.locale as string
   const [isAnnual, setIsAnnual] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
+  const [currentPlan, setCurrentPlan] = useState<string>('free')
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        setUser({ id: authUser.id, email: authUser.email || undefined })
+        const { data: sub } = await supabase
+          .from('subscriptions' as any)
+          .select('plan_type, status')
+          .eq('user_id', authUser.id)
+          .single()
+        if (sub && (sub as any).status === 'active') {
+          setCurrentPlan((sub as any).plan_type)
+        }
+      }
+    }
+    fetchUser()
+  }, [])
+
+  const handleCheckout = useCallback(async (plan: string) => {
+    if (!user) {
+      router.push(`/${locale}/login?redirect=/${locale}/pricing`)
+      return
+    }
+
+    setCheckoutLoading(plan)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan,
+          billing: isAnnual ? 'annual' : 'monthly',
+          locale,
+        }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        console.error('Checkout error:', errData)
+        return
+      }
+
+      const { checkoutUrl } = await res.json()
+      window.location.href = checkoutUrl
+    } catch (error) {
+      console.error('Checkout error:', error)
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }, [user, isAnnual, locale, router])
+
+  function getCtaText(planId: string): string {
+    if (planId === 'free') return t('pricing.plans.free.cta')
+    if (currentPlan === planId) return t('checkout.currentPlan')
+    if (planId === 'basic' && currentPlan === 'pro') return t('checkout.downgrade')
+    return t(`pricing.plans.${planId}.cta`)
+  }
+
+  function isCtaDisabled(planId: string): boolean {
+    return currentPlan === planId && planId !== 'free'
+  }
 
   const plans = [
     {
@@ -20,8 +88,6 @@ export default function PricingPage() {
       period: t('pricing.plans.free.period'),
       description: t('pricing.plans.free.description'),
       features: t.raw('pricing.plans.free.features') as string[],
-      cta: t('pricing.plans.free.cta'),
-      href: `/${locale}/analysis/new`,
       popular: false,
     },
     {
@@ -31,8 +97,6 @@ export default function PricingPage() {
       period: isAnnual ? (locale === 'ko' ? '연간' : 'per year') : t('pricing.plans.basic.period'),
       description: t('pricing.plans.basic.description'),
       features: t.raw('pricing.plans.basic.features') as string[],
-      cta: t('pricing.plans.basic.cta'),
-      href: `/${locale}/analysis/new`,
       popular: true,
     },
     {
@@ -42,8 +106,6 @@ export default function PricingPage() {
       period: isAnnual ? (locale === 'ko' ? '연간' : 'per year') : t('pricing.plans.pro.period'),
       description: t('pricing.plans.pro.description'),
       features: t.raw('pricing.plans.pro.features') as string[],
-      cta: t('pricing.plans.pro.cta'),
-      href: `/${locale}/analysis/new`,
       popular: false,
     },
   ]
@@ -67,7 +129,7 @@ export default function PricingPage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       ) : (
-        <span className="text-gray-300">—</span>
+        <span className="text-gray-300">-</span>
       )
     }
     return <span className={`text-sm ${highlight ? 'font-medium text-green-700' : 'text-gray-600'}`}>{value}</span>
@@ -110,52 +172,77 @@ export default function PricingPage() {
       <section className="py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-6">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative bg-white rounded-2xl p-8 transition-shadow ${
-                  plan.popular
-                    ? 'border-2 border-green-500 shadow-lg shadow-green-100'
-                    : 'border border-gray-200 hover:shadow-md'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs font-bold px-4 py-1 rounded-full">
-                    {t('pricing.plans.basic.popular')}
-                  </div>
-                )}
+            {plans.map((plan) => {
+              const disabled = isCtaDisabled(plan.id)
+              const loading = checkoutLoading === plan.id
 
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
-                <p className="text-sm text-gray-500 mb-5">{plan.description}</p>
-
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                  <span className="text-gray-400 text-sm">/ {plan.period}</span>
-                </div>
-
-                <Link
-                  href={plan.href}
-                  className={`block w-full py-3 rounded-xl text-center font-semibold transition mb-6 ${
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative bg-white rounded-2xl p-8 transition-shadow ${
                     plan.popular
-                      ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? 'border-2 border-green-500 shadow-lg shadow-green-100'
+                      : 'border border-gray-200 hover:shadow-md'
                   }`}
                 >
-                  {plan.cta}
-                </Link>
+                  {plan.popular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs font-bold px-4 py-1 rounded-full">
+                      {t('pricing.plans.basic.popular')}
+                    </div>
+                  )}
 
-                <ul className="space-y-3">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5">
-                      <svg className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm text-gray-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+                  {currentPlan === plan.id && plan.id !== 'free' && (
+                    <div className="absolute -top-3.5 right-4 bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      {t('checkout.currentPlan')}
+                    </div>
+                  )}
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+                  <p className="text-sm text-gray-500 mb-5">{plan.description}</p>
+
+                  <div className="flex items-baseline gap-1 mb-6">
+                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                    <span className="text-gray-400 text-sm">/ {plan.period}</span>
+                  </div>
+
+                  {plan.id === 'free' ? (
+                    <Link
+                      href={`/${locale}/analysis/new`}
+                      className="block w-full py-3 rounded-xl text-center font-semibold transition mb-6 bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    >
+                      {getCtaText(plan.id)}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleCheckout(plan.id)}
+                      disabled={disabled || loading}
+                      className={`block w-full py-3 rounded-xl text-center font-semibold transition mb-6 ${
+                        disabled
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : plan.popular
+                            ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      }`}
+                    >
+                      {loading
+                        ? t('checkout.processing')
+                        : getCtaText(plan.id)}
+                    </button>
+                  )}
+
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <svg className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm text-gray-600">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>

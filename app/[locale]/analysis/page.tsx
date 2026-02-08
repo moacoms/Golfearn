@@ -5,6 +5,17 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import dynamic from 'next/dynamic'
+
+const ClubDistanceChart = dynamic(() => import('@/components/analysis/ClubDistanceChart'), {
+  ssr: false,
+  loading: () => <div className="h-72 bg-gray-50 rounded-xl animate-pulse" />
+})
+
+const ProgressChart = dynamic(() => import('@/components/analysis/ProgressChart'), {
+  ssr: false,
+  loading: () => <div className="h-72 bg-gray-50 rounded-xl animate-pulse" />
+})
 
 interface Session {
   id: string
@@ -14,6 +25,21 @@ interface Session {
   analysis_status: string
   created_at: string
   swing_analyses?: { id: string; summary: string }[]
+  shot_data?: Array<{
+    club_type: string
+    carry: number
+    ball_speed?: number
+    spin_rate?: number
+  }>
+}
+
+interface ClubStat {
+  club_type: string
+  avg_carry: number
+  avg_total: number
+  avg_ball_speed: number
+  avg_spin_rate: number
+  total_shots: number
 }
 
 interface Stats {
@@ -38,6 +64,8 @@ export default function AnalysisDashboard() {
   })
   const [userName, setUserName] = useState('Golfer')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [clubStats, setClubStats] = useState<ClubStat[]>([])
+  const [chartMetric, setChartMetric] = useState<'carry' | 'ballSpeed' | 'spinRate'>('carry')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,13 +96,23 @@ export default function AnalysisDashboard() {
           .from('swing_sessions' as any)
           .select(`
             *,
-            swing_analyses (id, summary)
+            swing_analyses (id, summary),
+            shot_data (id, club_type, carry_distance, ball_speed_mph, back_spin_rpm)
           `)
           .eq('user_id', user.id)
           .order('session_date', { ascending: false })
-          .limit(5) as { data: Session[] | null, error: unknown }
+          .limit(10) as { data: any[] | null, error: unknown }
 
-        setSessions(sessionsData || [])
+        const mappedSessions = (sessionsData || []).map((s: any) => ({
+          ...s,
+          shot_data: s.shot_data?.map((d: any) => ({
+            club_type: d.club_type,
+            carry: d.carry_distance,
+            ball_speed: d.ball_speed_mph,
+            spin_rate: d.back_spin_rpm,
+          }))
+        }))
+        setSessions(mappedSessions)
 
         const startOfMonth = new Date()
         startOfMonth.setDate(1)
@@ -99,6 +137,13 @@ export default function AnalysisDashboard() {
           .eq('user_id', user.id)
           .eq('status', 'active')
           .limit(1) as { data: { progress_percentage: number }[] | null, error: unknown }
+
+        const { data: clubStatData } = await supabase
+          .from('club_statistics' as any)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('total_shots', { ascending: false }) as { data: ClubStat[] | null, error: unknown }
+        setClubStats(clubStatData || [])
 
         setStats({
           driverAvg: driverStats?.avg_carry ? Math.round(driverStats.avg_carry) : null,
@@ -444,29 +489,93 @@ export default function AnalysisDashboard() {
               </div>
             </div>
 
-            {/* Club Performance */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">
-                {t('analysis.clubs.title')}
-              </h2>
-
-              <div className="flex gap-2 flex-wrap mb-6">
-                {['driver', '3wood', '5iron', '7iron', 'pw', 'sw'].map((club) => (
-                  <button
-                    key={club}
-                    className="px-4 py-2 rounded-xl bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-700 transition text-sm font-medium border border-gray-100 hover:border-green-200"
+            {/* Club Distance Chart */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {locale === 'ko' ? '클럽별 평균 거리' : 'Club Average Distance'}
+                </h2>
+                {clubStats.length > 0 && (
+                  <Link
+                    href={`/${locale}/analysis/history?tab=charts`}
+                    className="text-sm text-green-600 hover:text-green-700 font-medium"
                   >
-                    {t(`clubs.${club}`)}
-                  </button>
-                ))}
+                    {locale === 'ko' ? '상세 보기' : 'View Details'}
+                  </Link>
+                )}
               </div>
 
-              <div className="h-64 bg-gradient-to-br from-gray-50 to-green-50/30 rounded-xl flex flex-col items-center justify-center border border-dashed border-gray-200">
-                <svg className="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <p className="text-gray-400 text-sm">{locale === 'ko' ? '분석 데이터가 쌓이면 차트가 표시됩니다' : 'Charts will appear as you add analysis data'}</p>
+              {clubStats.length === 0 ? (
+                <div className="h-64 bg-gradient-to-br from-gray-50 to-green-50/30 rounded-xl flex flex-col items-center justify-center border border-dashed border-gray-200">
+                  <svg className="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <p className="text-gray-400 text-sm mb-3">
+                    {locale === 'ko' ? '분석 데이터가 쌓이면 차트가 표시됩니다' : 'Charts will appear as you add analysis data'}
+                  </p>
+                  <Link
+                    href={`/${locale}/analysis/new`}
+                    className="inline-flex items-center gap-1.5 text-green-600 font-medium text-sm hover:text-green-700 transition"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    {locale === 'ko' ? '첫 분석 시작하기' : 'Start Your First Analysis'}
+                  </Link>
+                </div>
+              ) : (
+                <ClubDistanceChart statistics={clubStats} locale={locale} />
+              )}
+            </div>
+
+            {/* Driver Progress Chart */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {locale === 'ko' ? '드라이버 발전 추이' : 'Driver Progress'}
+                </h2>
+                <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                  {([
+                    { key: 'carry' as const, ko: '캐리', en: 'Carry' },
+                    { key: 'ballSpeed' as const, ko: '볼스피드', en: 'Ball Speed' },
+                    { key: 'spinRate' as const, ko: '스핀량', en: 'Spin Rate' },
+                  ]).map(({ key, ko, en }) => (
+                    <button
+                      key={key}
+                      onClick={() => setChartMetric(key)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                        chartMetric === key
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {locale === 'ko' ? ko : en}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {sessions.filter(s => s.shot_data && s.shot_data.length > 0).length === 0 ? (
+                <div className="h-64 bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl flex flex-col items-center justify-center border border-dashed border-gray-200">
+                  <svg className="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <p className="text-gray-400 text-sm mb-3">
+                    {locale === 'ko' ? '샷 데이터가 쌓이면 발전 추이를 확인할 수 있습니다' : 'Progress trends will appear as you add shot data'}
+                  </p>
+                  <Link
+                    href={`/${locale}/analysis/new`}
+                    className="inline-flex items-center gap-1.5 text-green-600 font-medium text-sm hover:text-green-700 transition"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    {locale === 'ko' ? '첫 분석 시작하기' : 'Start Your First Analysis'}
+                  </Link>
+                </div>
+              ) : (
+                <ProgressChart sessions={sessions} metric={chartMetric} clubFilter="driver" locale={locale} />
+              )}
             </div>
           </>
         )}

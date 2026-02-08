@@ -359,6 +359,18 @@
     "language": "언어",
     "deleteAccount": "계정 삭제"
   },
+  "checkout": {
+    "processing": "처리 중...",
+    "currentPlan": "현재 플랜",
+    "downgrade": "다운그레이드",
+    "success": {
+      "title": "구독 완료!",
+      "description": "플랜이 활성화되었습니다. 지금 바로 스윙 분석을 시작하세요.",
+      "cta": "분석 시작하기",
+      "dashboard": "대시보드로 가기",
+      "emailNotice": "확인 이메일이 발송되었습니다."
+    }
+  },
   "subscription": {
     "title": "구독",
     "currentPlan": "현재 플랜",
@@ -368,6 +380,12 @@
     "unlimited": "무제한",
     "upgrade": "업그레이드",
     "cancel": "구독 취소",
+    "cancelConfirm": "구독을 취소하시겠습니까?",
+    "cancelDescription": "현재 결제 기간이 끝날 때까지 계속 이용할 수 있습니다. 언제든 다시 구독할 수 있습니다.",
+    "confirmCancel": "네, 취소합니다",
+    "changePlan": "플랜 변경",
+    "manage": "결제 관리",
+    "nextBilling": "다음 결제일",
     "billingHistory": "결제 내역"
   },
   "units": {

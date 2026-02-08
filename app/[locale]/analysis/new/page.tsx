@@ -77,7 +77,117 @@ export default function NewAnalysisPage() {
     offline: '',
   })
 
+  // Photo upload states
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [uploadedImageName, setUploadedImageName] = useState('')
+  const [imageMimeType, setImageMimeType] = useState('image/jpeg')
+  const [isExtracting, setIsExtracting] = useState(false)
+  const [ocrConfidence, setOcrConfidence] = useState<number | null>(null)
+  const [ocrWarnings, setOcrWarnings] = useState<string[]>([])
+  const [ocrError, setOcrError] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
   const freeAnalysesLeft = 2 // TODO: 실제 값 가져오기
+
+  const handleFileSelect = (file: File) => {
+    if (!file.type.match(/^image\/(jpeg|png)$/)) {
+      setOcrError(t('analysis.new.upload.invalidFileType'))
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setOcrError(t('analysis.new.upload.maxFileSize'))
+      return
+    }
+    setOcrError(null)
+    setOcrWarnings([])
+    setOcrConfidence(null)
+    setUploadedImageName(file.name)
+    setImageMimeType(file.type)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      setUploadedImage(dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileSelect(file)
+  }
+
+  const handleExtractOCR = async () => {
+    if (!uploadedImage) return
+    setIsExtracting(true)
+    setOcrError(null)
+    setOcrWarnings([])
+
+    try {
+      const base64Data = uploadedImage.split(',')[1]
+
+      const response = await fetch('/api/analysis/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64Data,
+          imageMimeType,
+          launchMonitor: launchMonitor || 'other',
+          locale,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.code === 'OCR_LIMIT_REACHED') {
+          setOcrError(t('analysis.new.upload.ocrLimitReached'))
+        } else {
+          setOcrError(result.error || t('analysis.new.upload.extractFailed'))
+        }
+        setIsExtracting(false)
+        return
+      }
+
+      if (result.shots && result.shots.length > 0) {
+        const newShots: ShotData[] = result.shots.map((shot: any) => ({
+          id: shot.id || Date.now().toString() + Math.random(),
+          clubType: shot.clubType || 'driver',
+          ballSpeed: shot.ballSpeed,
+          clubSpeed: shot.clubSpeed,
+          smashFactor: shot.smashFactor,
+          launchAngle: shot.launchAngle,
+          attackAngle: shot.attackAngle,
+          clubPath: shot.clubPath,
+          faceAngle: shot.faceAngle,
+          spinRate: shot.spinRate,
+          carry: shot.carry,
+          total: shot.total,
+          offline: shot.offline,
+        }))
+        setShots((prev) => [...prev, ...newShots])
+
+        if (result.units) {
+          if (result.units.distance === 'meters') setDistanceUnit('meters')
+          if (result.units.speed === 'ms') setSpeedUnit('ms')
+        }
+      }
+
+      setOcrConfidence(result.confidence ?? null)
+      setOcrWarnings(result.warnings || [])
+
+      if (!result.shots || result.shots.length === 0) {
+        setOcrError(t('analysis.new.upload.extractFailed'))
+      }
+    } catch (error) {
+      console.error('OCR error:', error)
+      setOcrError(t('analysis.new.upload.extractFailed'))
+    } finally {
+      setIsExtracting(false)
+    }
+  }
 
   const addShot = () => {
     if (!currentShot.carry) return
@@ -409,6 +519,182 @@ export default function NewAnalysisPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               {t('analysis.new.step4.title')}
             </h2>
+
+            {/* Photo Upload Section */}
+            {dataSource === 'photo' && (
+              <div className="bg-white rounded-xl p-6 mb-6">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">
+                  {t('analysis.new.upload.title')}
+                </h3>
+
+                {!uploadedImage ? (
+                  /* Drop Zone */
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer ${
+                      isDragging
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-300 hover:border-green-400 hover:bg-gray-50'
+                    }`}
+                    onClick={() => document.getElementById('photo-input')?.click()}
+                  >
+                    <input
+                      id="photo-input"
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleFileSelect(file)
+                      }}
+                    />
+                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-700 font-medium mb-1">
+                      {t('analysis.new.upload.drag')}
+                    </p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      {t('analysis.new.upload.or')}
+                    </p>
+                    <span className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {t('analysis.new.upload.browse')}
+                    </span>
+                    <p className="text-gray-400 text-xs mt-3">
+                      {t('analysis.new.upload.supported')}
+                    </p>
+                  </div>
+                ) : (
+                  /* Image Preview + Extract */
+                  <div>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="relative w-32 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={uploadedImage}
+                          alt="Uploaded"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{uploadedImageName}</p>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => {
+                              setUploadedImage(null)
+                              setUploadedImageName('')
+                              setOcrConfidence(null)
+                              setOcrWarnings([])
+                              setOcrError(null)
+                            }}
+                            className="text-sm text-gray-500 hover:text-gray-700 underline"
+                          >
+                            {t('analysis.new.upload.changeImage')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Extract Button */}
+                    {ocrConfidence === null && !ocrError && (
+                      <button
+                        onClick={handleExtractOCR}
+                        disabled={isExtracting}
+                        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                      >
+                        {isExtracting ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            {t('analysis.new.upload.processing')}
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            {t('analysis.new.upload.extract')}
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* OCR Success */}
+                    {ocrConfidence !== null && ocrConfidence > 0 && shots.length > 0 && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span className="font-medium text-green-800">{t('analysis.new.upload.extracted')}</span>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          {t('analysis.new.upload.extractedCount', { count: shots.length })}
+                          {' · '}
+                          {t('analysis.new.upload.confidence', { percent: Math.round(ocrConfidence * 100) })}
+                        </p>
+                        {ocrWarnings.length > 0 && (
+                          <p className="text-sm text-amber-700 mt-2">
+                            {t('analysis.new.upload.partialWarning')}
+                          </p>
+                        )}
+                        <p className="text-xs text-green-600 mt-2">
+                          {t('analysis.new.upload.reviewDesc')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* OCR Error */}
+                {ocrError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                    <p className="text-sm text-red-700 mb-3">{ocrError}</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setOcrError(null)
+                          setOcrConfidence(null)
+                          handleExtractOCR()
+                        }}
+                        className="text-sm font-medium text-red-700 hover:text-red-800 underline"
+                      >
+                        {t('analysis.new.upload.retry')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDataSource('manual')
+                          setOcrError(null)
+                        }}
+                        className="text-sm font-medium text-gray-600 hover:text-gray-800 underline"
+                      >
+                        {t('analysis.new.upload.manualFallback')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider when shots extracted or manual fallback available */}
+                {(shots.length > 0 || ocrConfidence !== null) && (
+                  <div className="flex items-center gap-3 mt-6">
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <span className="text-xs text-gray-400 font-medium">
+                      {locale === 'ko' ? '샷을 추가하거나 수정하세요' : 'Add or edit shots below'}
+                    </span>
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-white rounded-xl p-6">
               {/* Club Selector */}
