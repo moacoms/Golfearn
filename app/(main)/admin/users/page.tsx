@@ -35,35 +35,17 @@ export default function AdminUsersPage() {
     setLoading(true)
     try {
       // 프로필 데이터 가져오기
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error } = await (supabase as any)
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      // auth.users 데이터와 병합 (이메일, 마지막 로그인 시간)
-      const { data: authData } = await supabase.auth.admin?.listUsers()
-      
-      const mergedUsers = (profiles || []).map(profile => {
-        const authUser = authData?.users?.find(u => u.id === profile.id)
-        return {
-          ...profile,
-          email: authUser?.email,
-          last_sign_in_at: authUser?.last_sign_in_at
-        }
-      })
-
-      setUsers(mergedUsers)
+      setUsers(profiles || [])
     } catch (error) {
       console.error('Error fetching users:', error)
-      // admin.listUsers가 실패해도 프로필 데이터는 보여줌
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      setUsers(profiles || [])
+      setUsers([])
     } finally {
       setLoading(false)
     }
@@ -77,7 +59,7 @@ export default function AdminUsersPage() {
       if (role === 'pro') updateData.is_lesson_pro = value
       if (role === 'student') updateData.is_student = value
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update(updateData)
         .eq('id', userId)
@@ -245,9 +227,7 @@ export default function AdminUsersPage() {
                     {new Date(user.created_at).toLocaleDateString('ko-KR')}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.last_sign_in_at
-                      ? new Date(user.last_sign_in_at).toLocaleDateString('ko-KR')
-                      : '-'}
+                    -
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
