@@ -15,13 +15,19 @@ export default async function ProLayout({
   }
 
   // 프로필 확인 (레슨 프로인지)
-  const { data: profile } = await (supabase as any)
+  const { data: profile, error } = await (supabase as any)
     .from('profiles')
-    .select('is_lesson_pro, name')
+    .select('is_lesson_pro, full_name')
     .eq('id', user.id)
     .single()
 
-  if (!(profile as any)?.is_lesson_pro) {
+  // 에러가 있거나 프로필이 없으면 프로 등록 페이지로
+  if (error || !profile) {
+    console.error('Profile fetch error:', error)
+    redirect('/pro-register')
+  }
+
+  if (!profile.is_lesson_pro) {
     // 레슨 프로가 아니면 프로 등록 페이지로
     redirect('/pro-register')
   }
@@ -72,7 +78,7 @@ export default async function ProLayout({
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {(profile as any).name} 프로님
+                {profile.full_name || '레슨'} 프로님
               </span>
               <Link 
                 href="/pro/settings" 
