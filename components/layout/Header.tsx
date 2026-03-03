@@ -12,6 +12,7 @@ export default function Header() {
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isLessonPro, setIsLessonPro] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -33,15 +34,16 @@ export default function Header() {
             setUnreadCount(count || 0)
           })
 
-        // 관리자 권한 확인
+        // 관리자 권한 및 레슨 프로 확인
         supabase
           .from('profiles')
-          .select('is_admin')
+          .select('is_admin, is_lesson_pro')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            const profileData = data as { is_admin?: boolean } | null
+            const profileData = data as { is_admin?: boolean; is_lesson_pro?: boolean } | null
             setIsAdmin(profileData?.is_admin === true)
+            setIsLessonPro(profileData?.is_lesson_pro === true)
           })
       }
     })
@@ -52,6 +54,7 @@ export default function Header() {
       if (!session?.user) {
         setUnreadCount(0)
         setIsAdmin(false)
+        setIsLessonPro(false)
       }
     })
 
@@ -172,6 +175,14 @@ export default function Header() {
                 <Link href="/mypage" className="text-muted hover:text-foreground transition-colors">
                   {user.user_metadata?.full_name || user.email?.split('@')[0]}님
                 </Link>
+                {isLessonPro && (
+                  <Link
+                    href="/pro/dashboard"
+                    className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium hover:bg-emerald-200 transition-colors"
+                  >
+                    프로 CRM
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -241,6 +252,22 @@ export default function Header() {
               ))}
             </div>
 
+            {/* 프로 등록 섹션 - 로그인했지만 프로가 아닌 경우 */}
+            {user && !isLessonPro && (
+              <div className="py-3 border-b border-border">
+                <Link
+                  href="/pro-register"
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  <span>레슨 프로로 등록하기</span>
+                </Link>
+              </div>
+            )}
+
             {/* 골프 정보 */}
             <div className="py-3 border-b border-border">
               <p className="text-xs text-gray-400 uppercase tracking-wider mb-2 px-2">골프 정보</p>
@@ -273,6 +300,18 @@ export default function Header() {
                       </span>
                     )}
                   </Link>
+                  {isLessonPro && (
+                    <Link
+                      href="/pro/dashboard"
+                      className="flex items-center gap-2 px-2 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      <span>프로 CRM</span>
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link
                       href="/admin"
