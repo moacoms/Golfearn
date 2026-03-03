@@ -100,6 +100,12 @@ export default function AdminDashboard() {
       {/* 빠른 링크 */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <QuickLinkCard
+          title="회원 관리"
+          description="전체 회원 조회 및 권한 관리"
+          href="/admin/users"
+          icon="👥"
+        />
+        <QuickLinkCard
           title="마케팅 자동화"
           description="AI 콘텐츠 생성 및 발행 관리"
           href="/admin/marketing"
@@ -116,6 +122,12 @@ export default function AdminDashboard() {
           description="생성된 마케팅 콘텐츠 보기"
           href="/admin/marketing/content"
           icon="📁"
+        />
+        <QuickLinkCard
+          title="클럽 관리"
+          description="골프 클럽 카탈로그 관리"
+          href="/admin/clubs"
+          icon="⛳"
         />
       </div>
     </div>
