@@ -514,3 +514,244 @@ Golfearn = "골프 레슨 프로의 운영 + 코칭 올인원"
 - [CoachNow Coach Features](https://coachnow.com/coach-features)
 - [CoachNow Pricing](https://coachnow.com/pricing)
 - [CoachNow 2025 Key Features](https://coachnow.com/blog/2025-key-features)
+
+---
+
+## 11. Golfearn 레슨 프로 CRM 개발 계획
+
+### 11-1. 프로젝트 개요
+
+**서비스명:** Golfearn Pro CRM
+**타겟:** 한국 골프 레슨 프로 (프리랜서/개인 중심)
+**핵심 가치:** "카카오톡 대체 + AI 코칭 도구"
+
+### 11-2. 재사용 가능한 기존 자산
+
+| 기존 자산 | 활용 방안 |
+|-----------|----------|
+| Supabase Auth | 프로/학생 로그인 |
+| Next.js 14 + TypeScript | 프레임워크 그대로 사용 |
+| Tailwind CSS | UI 스타일링 |
+| UI 컴포넌트 (Button, Card, Input) | 기본 UI 요소 |
+| Lemon Squeezy 결제 | 프로 구독 결제 |
+| Claude API | AI 레슨 노트 생성 |
+| 다국어 시스템 (next-intl) | 추후 글로벌 확장 |
+
+### 11-3. 새로운 DB 스키마
+
+```sql
+-- 1. 레슨 프로 프로필 확장
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS
+  is_lesson_pro BOOLEAN DEFAULT false,
+  pro_certification VARCHAR(200),
+  pro_experience_years INTEGER,
+  pro_specialties TEXT[],
+  pro_introduction TEXT,
+  pro_monthly_fee INTEGER;
+
+-- 2. 학생 관리
+CREATE TABLE lesson_students (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pro_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_name VARCHAR(100) NOT NULL,
+  student_phone VARCHAR(20),
+  student_email VARCHAR(100),
+  student_memo TEXT,
+  current_level VARCHAR(50),
+  goal TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_lesson_at TIMESTAMPTZ,
+  total_lesson_count INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true
+);
+
+-- 3. 수강권/패키지
+CREATE TABLE lesson_packages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pro_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES lesson_students(id) ON DELETE CASCADE,
+  package_name VARCHAR(100) NOT NULL,
+  total_count INTEGER NOT NULL,
+  used_count INTEGER DEFAULT 0,
+  price INTEGER NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  status VARCHAR(20) DEFAULT 'active',
+  payment_status VARCHAR(20) DEFAULT 'pending',
+  paid_amount INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. 레슨 스케줄
+CREATE TABLE lesson_schedules (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pro_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES lesson_students(id) ON DELETE CASCADE,
+  package_id UUID REFERENCES lesson_packages(id),
+  lesson_date DATE NOT NULL,
+  lesson_time TIME NOT NULL,
+  duration_minutes INTEGER DEFAULT 50,
+  status VARCHAR(20) DEFAULT 'scheduled',
+  location VARCHAR(200),
+  memo TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. AI 레슨 노트
+CREATE TABLE lesson_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  schedule_id UUID REFERENCES lesson_schedules(id) ON DELETE CASCADE,
+  pro_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES lesson_students(id) ON DELETE CASCADE,
+  voice_transcript TEXT,
+  ai_structured_note JSONB,
+  key_points TEXT[],
+  homework TEXT,
+  next_focus TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. 수입 관리
+CREATE TABLE pro_income_records (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pro_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES lesson_students(id),
+  package_id UUID REFERENCES lesson_packages(id),
+  amount INTEGER NOT NULL,
+  payment_method VARCHAR(50),
+  payment_date DATE NOT NULL,
+  memo TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 인덱스 생성
+CREATE INDEX idx_lesson_students_pro ON lesson_students(pro_id);
+CREATE INDEX idx_lesson_packages_student ON lesson_packages(student_id);
+CREATE INDEX idx_lesson_schedules_date ON lesson_schedules(lesson_date);
+CREATE INDEX idx_lesson_schedules_pro ON lesson_schedules(pro_id);
+CREATE INDEX idx_pro_income_date ON pro_income_records(payment_date);
+```
+
+### 11-4. 개발 로드맵
+
+#### Phase 1: MVP (2주)
+
+**Week 1: 기본 구조**
+- [ ] DB 마이그레이션 적용
+- [ ] `/pro` 라우트 구조 생성
+- [ ] 프로 대시보드 (`/pro/dashboard`)
+- [ ] 학생 관리 (`/pro/students`)
+
+**Week 2: 핵심 기능**
+- [ ] 스케줄 관리 (`/pro/schedule`)
+- [ ] 수강권 관리 (`/pro/packages`)
+- [ ] 기본 CRUD 작업
+
+#### Phase 2: 차별화 기능 (3-4주)
+
+**Week 3-4: AI & 자동화**
+- [ ] AI 레슨 노트 (음성 → 텍스트 → 구조화)
+- [ ] 카카오톡 알림 연동
+- [ ] 수입 대시보드
+- [ ] 리텐션 알림 시스템
+
+#### Phase 3: 확장 (5-6주)
+
+**Week 5-6: 고급 기능**
+- [ ] 영상 피드백 시스템
+- [ ] 학생용 웹앱
+- [ ] 프로 마케팅 페이지
+- [ ] 통계 및 분석
+
+### 11-5. 기술 스택 상세
+
+```typescript
+// 신규 개발 필요 컴포넌트
+/app/pro/
+  layout.tsx          // 프로 전용 레이아웃
+  dashboard/page.tsx  // 대시보드
+  students/page.tsx   // 학생 목록
+  students/[id]/page.tsx  // 학생 상세
+  schedule/page.tsx   // 스케줄 캘린더
+  packages/page.tsx   // 수강권 관리
+  income/page.tsx     // 수입 관리
+  settings/page.tsx   // 프로 설정
+
+/components/pro/
+  DashboardStats.tsx  // 통계 위젯
+  StudentCard.tsx     // 학생 카드
+  ScheduleCalendar.tsx // 캘린더 컴포넌트
+  PackageManager.tsx  // 수강권 관리
+  IncomeChart.tsx     // 수입 차트
+  LessonNoteEditor.tsx // AI 노트 에디터
+
+/lib/actions/
+  lesson-students.ts  // 학생 CRUD
+  lesson-schedules.ts // 스케줄 CRUD
+  lesson-packages.ts  // 수강권 CRUD
+  lesson-notes.ts     // AI 노트 생성
+  pro-income.ts       // 수입 관리
+```
+
+### 11-6. 차별화 전략
+
+| 기능 | 레슨북 | CoachNow | Golfearn Pro |
+|------|--------|----------|--------------|
+| 한국형 수강권 | ✅ | ❌ | ✅ |
+| 카카오톡 연동 | ❌ | ❌ | ✅ |
+| AI 레슨 노트 | ❌ | ❌ | ✅ |
+| 영상 분석 | ❌ | ✅ | ✅ (Phase 3) |
+| 수입 관리 | ✅ | ❌ | ✅ |
+| 가격 | 비공개 | $49/월 | 39,000원/월 |
+
+### 11-7. 수익 모델
+
+```
+Starter (무료)
+- 학생 3명까지
+- 기본 스케줄 관리
+- 수강권 관리
+
+Pro (월 39,000원)
+- 학생 30명까지
+- AI 레슨 노트 월 50회
+- 카카오톡 알림
+- 수입 관리
+
+Premium (월 79,000원)
+- 학생 무제한
+- AI 레슨 노트 무제한
+- 영상 피드백
+- 우선 지원
+```
+
+### 11-8. 시장 검증 체크리스트
+
+- [ ] 레슨북 직접 사용 및 분석
+- [ ] 프로 10명 인터뷰
+- [ ] 월 3-5만원 지불 의사 확인
+- [ ] MVP 프로토타입 피드백
+- [ ] 50명 사전 신청 확보
+
+### 11-9. 리스크 및 대응
+
+| 리스크 | 대응 방안 |
+|--------|----------|
+| 레슨북이 AI 기능 추가 | 선점 효과 + 카카오톡 차별화 |
+| 프로의 낮은 지불 의사 | 무료 체험 + 성공 사례 확산 |
+| 개발 리소스 부족 | MVP 최소화 + 단계적 출시 |
+| 골프 시장 축소 | 해외 진출 준비 (일본/미국) |
+
+### 11-10. 성공 지표 (KPI)
+
+| 시점 | 목표 |
+|------|------|
+| 1개월 | 프로 50명 가입, 10명 유료 전환 |
+| 3개월 | 프로 300명, 100명 유료 (MRR 390만원) |
+| 6개월 | 프로 1,000명, 300명 유료 (MRR 1,170만원) |
+| 1년 | 프로 3,000명, 1,000명 유료 (MRR 3,900만원) |
+
+---
+
+*작성일: 2026-03-02*
+*다음 업데이트: 인터뷰 결과 반영 후*
