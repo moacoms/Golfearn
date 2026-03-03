@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Card from '@/components/ui/Card'
@@ -11,6 +11,11 @@ export default function NewStudentPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [registrationType, setRegistrationType] = useState<'existing' | 'new'>('existing')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [searching, setSearching] = useState(false)
 
   const [formData, setFormData] = useState({
     student_name: '',
@@ -25,6 +30,38 @@ export default function NewStudentPage() {
     average_score: ''
   })
 
+  // 회원 검색
+  const searchUsers = async () => {
+    if (!searchQuery.trim()) return
+    
+    setSearching(true)
+    try {
+      // 이름으로 검색 (프로필 테이블에서)
+      const { data: profiles } = await (supabase as any)
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .or(`full_name.ilike.%${searchQuery}%`)
+        .limit(10)
+
+      setSearchResults(profiles || [])
+    } catch (err) {
+      console.error('Search error:', err)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  // 기존 회원 선택 시 정보 자동 입력
+  useEffect(() => {
+    if (selectedUser) {
+      setFormData(prev => ({
+        ...prev,
+        student_name: selectedUser.full_name || '',
+        student_email: selectedUser.email || ''
+      }))
+    }
+  }, [selectedUser])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -34,16 +71,24 @@ export default function NewStudentPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다')
 
+      // 학생 추가 데이터 준비
+      const studentData: any = {
+        pro_id: user.id,
+        ...formData,
+        average_score: formData.average_score ? parseInt(formData.average_score) : null,
+        birth_date: formData.birth_date || null,
+        started_golf_at: formData.started_golf_at || null
+      }
+
+      // 기존 회원 연결
+      if (registrationType === 'existing' && selectedUser) {
+        studentData.user_id = selectedUser.id
+      }
+
       // 학생 추가
       const { data, error } = await (supabase as any)
         .from('lesson_students')
-        .insert({
-          pro_id: user.id,
-          ...formData,
-          average_score: formData.average_score ? parseInt(formData.average_score) : null,
-          birth_date: formData.birth_date || null,
-          started_golf_at: formData.started_golf_at || null
-        })
+        .insert(studentData)
         .select()
         .single()
 
@@ -63,9 +108,124 @@ export default function NewStudentPage() {
 
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 등록 방식 선택 */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">등록 방식</h3>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setRegistrationType('existing')
+                  setSelectedUser(null)
+                  setFormData({
+                    student_name: '',
+                    student_phone: '',
+                    student_email: '',
+                    current_level: '초급',
+                    goal: '',
+                    student_memo: '',
+                    birth_date: '',
+                    gender: '',
+                    started_golf_at: '',
+                    average_score: ''
+                  })
+                }}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
+                  registrationType === 'existing' 
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className="font-medium">기존 회원에서 선택</div>
+                <div className="text-sm text-gray-600 mt-1">앱 회원을 학생으로 등록</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRegistrationType('new')
+                  setSelectedUser(null)
+                  setSearchResults([])
+                }}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
+                  registrationType === 'new' 
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className="font-medium">새로운 학생 추가</div>
+                <div className="text-sm text-gray-600 mt-1">회원이 아닌 학생 등록</div>
+              </button>
+            </div>
+          </div>
+
+          {/* 기존 회원 검색 */}
+          {registrationType === 'existing' && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">회원 검색</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="이름 또는 이메일로 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), searchUsers())}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={searchUsers}
+                  disabled={searching}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-400"
+                >
+                  {searching ? '검색 중...' : '검색'}
+                </button>
+              </div>
+
+              {/* 검색 결과 */}
+              {searchResults.length > 0 && (
+                <div className="mt-4 border rounded-lg divide-y">
+                  {searchResults.map(user => (
+                    <div
+                      key={user.id}
+                      onClick={() => setSelectedUser(user)}
+                      className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                        selectedUser?.id === user.id ? 'bg-emerald-50 border-l-4 border-emerald-600' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} className="w-full h-full rounded-full" />
+                          ) : (
+                            <span className="text-gray-600">{user.full_name?.[0] || '?'}</span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.full_name || '이름 없음'}</div>
+                          <div className="text-sm text-gray-600">{user.email}</div>
+                        </div>
+                        {selectedUser?.id === user.id && (
+                          <div className="ml-auto text-emerald-600">✓ 선택됨</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedUser && (
+                <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <div className="text-sm text-emerald-700">
+                    선택된 회원: <strong>{selectedUser.full_name || selectedUser.email}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 기본 정보 */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">학생 정보</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

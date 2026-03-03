@@ -13,6 +13,7 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLessonPro, setIsLessonPro] = useState(false)
+  const [isStudent, setIsStudent] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -34,16 +35,17 @@ export default function Header() {
             setUnreadCount(count || 0)
           })
 
-        // 관리자 권한 및 레슨 프로 확인
+        // 관리자 권한, 레슨 프로, 학생 확인
         supabase
           .from('profiles')
-          .select('is_admin, is_lesson_pro')
+          .select('is_admin, is_lesson_pro, is_student')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            const profileData = data as { is_admin?: boolean; is_lesson_pro?: boolean } | null
+            const profileData = data as { is_admin?: boolean; is_lesson_pro?: boolean; is_student?: boolean } | null
             setIsAdmin(profileData?.is_admin === true)
             setIsLessonPro(profileData?.is_lesson_pro === true)
+            setIsStudent(profileData?.is_student === true)
           })
       }
     })
@@ -55,6 +57,7 @@ export default function Header() {
         setUnreadCount(0)
         setIsAdmin(false)
         setIsLessonPro(false)
+        setIsStudent(false)
       }
     })
 
@@ -175,6 +178,14 @@ export default function Header() {
                 <Link href="/mypage" className="text-muted hover:text-foreground transition-colors">
                   {user.user_metadata?.full_name || user.email?.split('@')[0]}님
                 </Link>
+                {isStudent && (
+                  <Link
+                    href="/student"
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                  >
+                    내 레슨
+                  </Link>
+                )}
                 {isLessonPro && (
                   <Link
                     href="/pro/dashboard"
@@ -300,6 +311,18 @@ export default function Header() {
                       </span>
                     )}
                   </Link>
+                  {isStudent && (
+                    <Link
+                      href="/student"
+                      className="flex items-center gap-2 px-2 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      <span>내 레슨</span>
+                    </Link>
+                  )}
                   {isLessonPro && (
                     <Link
                       href="/pro/dashboard"

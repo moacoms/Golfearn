@@ -36,7 +36,8 @@ export async function middleware(request: NextRequest) {
     '/community', '/market', '/join', '/lesson-pro', '/practice-range',
     '/club-catalog', '/club-recommend', '/mypage', '/guide', '/golf-courses',
     '/admin', '/login', '/signup',
-    '/pro', '/pro-register', // 레슨프로 CRM 페이지 추가
+    '/pro', '/pro-register', // 레슨프로 CRM 페이지
+    '/student', // 학생 대시보드
   ]
 
   // 직접 레거시 경로 접근 (예: /mypage)
