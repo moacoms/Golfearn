@@ -15,13 +15,13 @@ export default async function ProLayout({
   }
 
   // 프로필 확인 (레슨 프로인지)
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('is_lesson_pro, name')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.is_lesson_pro) {
+  if (!(profile as any)?.is_lesson_pro) {
     // 레슨 프로가 아니면 프로 등록 페이지로
     redirect('/pro-register')
   }
@@ -72,7 +72,7 @@ export default async function ProLayout({
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {profile.name} 프로님
+                {(profile as any).name} 프로님
               </span>
               <Link 
                 href="/pro/settings" 

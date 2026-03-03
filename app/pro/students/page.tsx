@@ -26,8 +26,8 @@ export default async function StudentsPage() {
     .order('created_at', { ascending: false })
 
   // 통계
-  const activeStudents = students?.filter(s => s.is_active) || []
-  const inactiveStudents = students?.filter(s => !s.is_active) || []
+  const activeStudents = students?.filter((s: any) => s.is_active) || []
+  const inactiveStudents = students?.filter((s: any) => !s.is_active) || []
 
   return (
     <div className="space-y-6">

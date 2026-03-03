@@ -35,7 +35,7 @@ export default function NewStudentPage() {
       if (!user) throw new Error('로그인이 필요합니다')
 
       // 학생 추가
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('lesson_students')
         .insert({
           pro_id: user.id,

@@ -23,12 +23,12 @@ export default async function PackagesPage() {
     .order('created_at', { ascending: false })
 
   // 통계
-  const activePackages = packages?.filter(p => p.status === 'active') || []
-  const expiredPackages = packages?.filter(p => p.status === 'expired') || []
-  const completedPackages = packages?.filter(p => p.status === 'completed') || []
+  const activePackages = packages?.filter((p: any) => p.status === 'active') || []
+  const expiredPackages = packages?.filter((p: any) => p.status === 'expired') || []
+  const completedPackages = packages?.filter((p: any) => p.status === 'completed') || []
 
   // 총 미수금 계산
-  const totalUnpaid = packages?.reduce((sum, pkg) => {
+  const totalUnpaid = packages?.reduce((sum, pkg: any) => {
     if (pkg.payment_status !== 'paid') {
       return sum + (pkg.price - (pkg.paid_amount || 0))
     }
