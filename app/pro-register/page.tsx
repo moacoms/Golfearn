@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 
 export default function ProRegisterPage() {
@@ -46,7 +46,7 @@ export default function ProRegisterPage() {
       if (!user) throw new Error('로그인이 필요합니다')
 
       // 프로필 업데이트
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({
           is_lesson_pro: true,
@@ -63,7 +63,7 @@ export default function ProRegisterPage() {
       if (error) throw error
 
       // 알림 설정 초기화
-      await supabase
+      await (supabase as any)
         .from('pro_notification_settings')
         .insert({
           pro_id: user.id

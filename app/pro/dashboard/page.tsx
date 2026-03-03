@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 
 export default async function ProDashboardPage() {
   const supabase = await createClient()
@@ -49,7 +49,7 @@ export default async function ProDashboardPage() {
       .gte('payment_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
   ])
 
-  const totalMonthIncome = monthIncome?.reduce((sum, record) => sum + record.amount, 0) || 0
+  const totalMonthIncome = monthIncome?.reduce((sum, record: any) => sum + record.amount, 0) || 0
 
   // 내일 스케줄
   const { data: tomorrowSchedules } = await supabase

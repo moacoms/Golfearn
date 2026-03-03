@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 import PackageList from '@/components/pro/PackageList'
 
 export default async function PackagesPage() {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 
 interface Student {
   id: string

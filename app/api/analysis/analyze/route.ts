@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 
+// ANTHROPIC_API_KEY 검증
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn('Warning: ANTHROPIC_API_KEY is not set')
+}
+
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
 })
 
 interface ShotData {
@@ -12,13 +17,14 @@ interface ShotData {
   clubSpeed?: number
   launchAngle?: number
   spinRate?: number
-  carry: number
-  total?: number
+  carry?: number
+  total: number
   offline?: number
   attackAngle?: number
   clubPath?: number
   faceAngle?: number
   smashFactor?: number
+  isEstimated?: boolean // 볼스피드가 추정값인지 여부
 }
 
 interface AnalysisRequest {
@@ -43,6 +49,16 @@ interface Subscription {
   plan_type: string
   monthly_analysis_count: number
   monthly_ocr_count: number
+  monthly_analysis_limit: number
+  daily_analysis_count: number
+  last_analysis_date: string | null
+}
+
+interface DailyLimitResult {
+  can_analyze: boolean
+  remaining_today: number
+  plan_type: string
+  is_unlimited: boolean
 }
 
 interface Session {
@@ -146,7 +162,10 @@ function generateAnalysisPrompt(data: AnalysisRequest): string {
 
   // 클럽별 통계 계산
   const clubStats = Object.entries(shotsByClub).map(([clubType, clubShots]) => {
-    const avgCarry = clubShots.reduce((sum, s) => sum + s.carry, 0) / clubShots.length
+    const avgTotal = clubShots.reduce((sum, s) => sum + s.total, 0) / clubShots.length
+    const avgCarry = clubShots.filter(s => s.carry).length > 0
+      ? clubShots.filter(s => s.carry).reduce((sum, s) => sum + (s.carry || 0), 0) / clubShots.filter(s => s.carry).length
+      : null
     const avgBallSpeed = clubShots.filter(s => s.ballSpeed).length > 0
       ? clubShots.filter(s => s.ballSpeed).reduce((sum, s) => sum + (s.ballSpeed || 0), 0) / clubShots.filter(s => s.ballSpeed).length
       : null
@@ -156,21 +175,28 @@ function generateAnalysisPrompt(data: AnalysisRequest): string {
     const avgSpinRate = clubShots.filter(s => s.spinRate).length > 0
       ? clubShots.filter(s => s.spinRate).reduce((sum, s) => sum + (s.spinRate || 0), 0) / clubShots.filter(s => s.spinRate).length
       : null
+    const hasEstimatedBallSpeed = clubShots.some(s => s.isEstimated)
 
     return {
       clubType,
       shotCount: clubShots.length,
-      avgCarry: Math.round(avgCarry * 10) / 10,
+      avgTotal: Math.round(avgTotal * 10) / 10,
+      avgCarry: avgCarry ? Math.round(avgCarry * 10) / 10 : null,
       avgBallSpeed: avgBallSpeed ? Math.round(avgBallSpeed * 10) / 10 : null,
       avgLaunchAngle: avgLaunchAngle ? Math.round(avgLaunchAngle * 10) / 10 : null,
       avgSpinRate: avgSpinRate ? Math.round(avgSpinRate) : null,
+      hasEstimatedBallSpeed,
     }
   })
 
   const formatShotData = () => {
     return clubStats.map(stat => {
-      let result = `${stat.clubType.toUpperCase()}: ${stat.shotCount} shots, Avg Carry: ${stat.avgCarry} yds`
-      if (stat.avgBallSpeed) result += `, Ball Speed: ${stat.avgBallSpeed} mph`
+      let result = `${stat.clubType.toUpperCase()}: ${stat.shotCount} shots, Avg Total: ${stat.avgTotal} yds`
+      if (stat.avgCarry) result += `, Carry: ${stat.avgCarry} yds`
+      if (stat.avgBallSpeed) {
+        result += `, Ball Speed: ${stat.avgBallSpeed} mph`
+        if (stat.hasEstimatedBallSpeed) result += ' (estimated)'
+      }
       if (stat.avgLaunchAngle) result += `, Launch: ${stat.avgLaunchAngle}deg`
       if (stat.avgSpinRate) result += `, Spin: ${stat.avgSpinRate} rpm`
       return result
@@ -260,20 +286,67 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 사용량 체크 (무료 사용자: 월 3회)
-    const { data: subscriptionData } = await (supabase as any)
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .single() as { data: Subscription | null, error: unknown }
+    // 필수 필드 검증: 클럽, 토탈, 볼스피드 (또는 isEstimated)
+    for (const shot of shots) {
+      if (!shot.clubType) {
+        return NextResponse.json(
+          { error: 'Club type is required for all shots', code: 'MISSING_CLUB' },
+          { status: 400 }
+        )
+      }
+      if (!shot.total && shot.total !== 0) {
+        return NextResponse.json(
+          { error: 'Total distance is required for all shots', code: 'MISSING_TOTAL' },
+          { status: 400 }
+        )
+      }
+      if (!shot.ballSpeed && !shot.isEstimated) {
+        return NextResponse.json(
+          { error: 'Ball speed is required (or use estimated value)', code: 'MISSING_BALL_SPEED' },
+          { status: 400 }
+        )
+      }
+    }
 
-    const planType = subscriptionData?.plan_type || 'free'
-    const monthlyLimit = planType === 'free' ? 3 : -1 // -1 = 무제한
-    const currentUsage = subscriptionData?.monthly_analysis_count || 0
+    // 일일 사용량 체크 (무료 사용자: 하루 1회)
+    const { data: limitData, error: limitError } = await (supabase as any)
+      .rpc('check_daily_analysis_limit', { p_user_id: user.id })
+      .single() as { data: DailyLimitResult | null, error: unknown }
 
-    if (monthlyLimit !== -1 && currentUsage >= monthlyLimit) {
+    let canAnalyze = true
+    let remainingToday = 1
+    let isUnlimited = false
+
+    if (limitError) {
+      // 함수가 없을 경우 fallback: subscriptions 테이블 직접 조회
+      const { data: subscriptionData } = await (supabase as any)
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single() as { data: Subscription | null, error: unknown }
+
+      if (subscriptionData) {
+        const today = new Date().toISOString().split('T')[0]
+        const lastDate = subscriptionData.last_analysis_date
+
+        let dailyCount = subscriptionData.daily_analysis_count || 0
+        if (!lastDate || lastDate < today) {
+          dailyCount = 0
+        }
+
+        isUnlimited = subscriptionData.monthly_analysis_limit === -1
+        canAnalyze = isUnlimited || dailyCount < 1
+        remainingToday = isUnlimited ? -1 : Math.max(0, 1 - dailyCount)
+      }
+    } else if (limitData) {
+      canAnalyze = limitData.can_analyze
+      remainingToday = limitData.remaining_today
+      isUnlimited = limitData.is_unlimited
+    }
+
+    if (!canAnalyze) {
       return NextResponse.json(
-        { error: 'Monthly limit reached', code: 'LIMIT_REACHED' },
+        { error: 'Daily limit reached', code: 'DAILY_LIMIT_REACHED', remainingToday: 0 },
         { status: 403 }
       )
     }
@@ -372,29 +445,53 @@ export async function POST(request: NextRequest) {
       console.error('Analysis save error:', analysisError)
     }
 
-    // 사용량 업데이트
-    if (subscriptionData) {
-      await (supabase as any)
+    // 일일 사용량 업데이트 (PostgreSQL 함수 호출)
+    const { error: usageError } = await (supabase as any)
+      .rpc('increment_daily_analysis_usage', { p_user_id: user.id })
+
+    if (usageError) {
+      // 함수가 없을 경우 fallback: 직접 업데이트
+      const today = new Date().toISOString().split('T')[0]
+
+      const { data: currentSub } = await (supabase as any)
         .from('subscriptions')
-        .update({
-          monthly_analysis_count: currentUsage + 1,
-          updated_at: new Date().toISOString(),
-        })
+        .select('last_analysis_date, daily_analysis_count, monthly_analysis_count')
         .eq('user_id', user.id)
-    } else {
-      // 구독 레코드가 없으면 생성
-      await (supabase as any)
-        .from('subscriptions')
-        .insert({
-          user_id: user.id,
-          plan_type: 'free',
-          status: 'active',
-          monthly_analysis_count: 1,
-          monthly_analysis_limit: 3,
-          monthly_ocr_count: 0,
-          monthly_ocr_limit: 5,
-        })
+        .single()
+
+      if (currentSub) {
+        const lastDate = currentSub.last_analysis_date
+        const newDailyCount = (!lastDate || lastDate < today) ? 1 : (currentSub.daily_analysis_count || 0) + 1
+
+        await (supabase as any)
+          .from('subscriptions')
+          .update({
+            daily_analysis_count: newDailyCount,
+            last_analysis_date: today,
+            monthly_analysis_count: (currentSub.monthly_analysis_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id)
+      } else {
+        // 구독 레코드가 없으면 생성
+        await (supabase as any)
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            plan_type: 'free',
+            status: 'active',
+            monthly_analysis_count: 1,
+            monthly_analysis_limit: 30,
+            monthly_ocr_count: 0,
+            monthly_ocr_limit: 5,
+            daily_analysis_count: 1,
+            last_analysis_date: today,
+          })
+      }
     }
+
+    // 남은 횟수 계산
+    const newRemainingToday = isUnlimited ? -1 : Math.max(0, remainingToday - 1)
 
     // 사용 로그 기록
     await (supabase as any).from('usage_logs').insert({
@@ -411,7 +508,8 @@ export async function POST(request: NextRequest) {
       analysisId: analysisData?.id,
       analysis: analysisContent,
       tokensUsed: (message.usage?.input_tokens || 0) + (message.usage?.output_tokens || 0),
-      remainingAnalyses: monthlyLimit === -1 ? -1 : monthlyLimit - currentUsage - 1,
+      remainingToday: newRemainingToday,
+      isUnlimited,
     })
 
   } catch (error) {

@@ -267,7 +267,13 @@
       },
       "analyze": "Analyze Now",
       "analyzing": "Analyzing your swing...",
-      "freeLeft": "{count} free analyses left"
+      "freeLeft": "{count} free analyses left",
+      "freeLeftToday": "{count} free analysis left today",
+      "dailyLimitReached": "You've used today's free analysis",
+      "comeBackTomorrow": "Come back tomorrow",
+      "estimated": "Estimated",
+      "estimateBallSpeed": "Estimate",
+      "unlimitedAnalyses": "Unlimited analyses"
     },
     "result": {
       "title": "Analysis Result",
@@ -433,8 +439,12 @@
     "notFound": "Page not found",
     "unauthorized": "Please sign in to continue",
     "limitReached": "You've reached your monthly limit. Upgrade to continue.",
+    "dailyLimitReached": "You've reached today's analysis limit",
     "ocrFailed": "Could not extract data from image. Please try again or enter manually.",
-    "analysisFailed": "Analysis failed. Please try again."
+    "analysisFailed": "Analysis failed. Please try again.",
+    "missingClub": "Please select a club type",
+    "missingTotal": "Total distance is required",
+    "missingBallSpeed": "Please enter ball speed or click Estimate"
   },
   "footer": {
     "product": "Product",

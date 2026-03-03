@@ -11,6 +11,28 @@ type LaunchMonitor = 'trackman' | 'golfzon' | 'gdr' | 'kakao' | 'flightscope' | 
 type SessionType = 'practice' | 'round' | 'fitting'
 type ClubType = 'driver' | '3wood' | '5wood' | 'hybrid' | '5iron' | '6iron' | '7iron' | '8iron' | '9iron' | 'pw' | 'gw' | 'sw' | 'lw'
 
+// 볼스피드 추정 비율 (클럽별 토탈 거리 / 볼스피드)
+const BALL_SPEED_RATIOS: Record<ClubType, number> = {
+  driver: 2.6,    // 260yds / 100mph = 2.6
+  '3wood': 2.4,
+  '5wood': 2.2,
+  hybrid: 2.1,
+  '5iron': 2.0,
+  '6iron': 1.9,
+  '7iron': 1.8,
+  '8iron': 1.7,
+  '9iron': 1.6,
+  pw: 1.5,
+  gw: 1.4,
+  sw: 1.3,
+  lw: 1.2,
+}
+
+function estimateBallSpeed(clubType: ClubType, total: number): number {
+  const ratio = BALL_SPEED_RATIOS[clubType] || 2.0
+  return Math.round(total / ratio)
+}
+
 type DistanceUnit = 'yards' | 'meters'
 type SpeedUnit = 'mph' | 'ms'
 
@@ -28,6 +50,7 @@ interface ShotData {
   carry?: number
   total?: number
   offline?: number
+  isEstimated?: boolean // 볼스피드가 추정값인지
 }
 
 export default function NewAnalysisPage() {
@@ -86,8 +109,33 @@ export default function NewAnalysisPage() {
   const [ocrWarnings, setOcrWarnings] = useState<string[]>([])
   const [ocrError, setOcrError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isBallSpeedEstimated, setIsBallSpeedEstimated] = useState(false)
 
-  const freeAnalysesLeft = 2 // TODO: 실제 값 가져오기
+  // 구독 상태 (일일 제한)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const [remainingToday, setRemainingToday] = useState(1)
+  const [isUnlimited, setIsUnlimited] = useState(false)
+  const [dailyLimitReached, setDailyLimitReached] = useState(false)
+
+  // 구독 상태 가져오기
+  useEffect(() => {
+    const fetchSubscriptionStatus = async () => {
+      try {
+        const response = await fetch('/api/subscription/status')
+        if (response.ok) {
+          const data = await response.json()
+          setRemainingToday(data.remainingToday)
+          setIsUnlimited(data.isUnlimited)
+          setDailyLimitReached(!data.canAnalyze)
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription status:', error)
+      } finally {
+        setSubscriptionLoading(false)
+      }
+    }
+    fetchSubscriptionStatus()
+  }, [])
 
   const handleFileSelect = (file: File) => {
     if (!file.type.match(/^image\/(jpeg|png)$/)) {
@@ -189,8 +237,27 @@ export default function NewAnalysisPage() {
     }
   }
 
+  // 볼스피드 추정 핸들러
+  const handleEstimateBallSpeed = () => {
+    if (!currentShot.total) return
+    const total = parseFloat(currentShot.total)
+    if (isNaN(total) || total <= 0) return
+
+    const estimated = estimateBallSpeed(currentClub, total)
+    setCurrentShot({ ...currentShot, ballSpeed: estimated.toString() })
+    setIsBallSpeedEstimated(true)
+  }
+
   const addShot = () => {
-    if (!currentShot.carry) return
+    // 필수 필드: 클럽(이미 선택됨), 토탈, 볼스피드
+    if (!currentShot.total) {
+      alert(t('errors.missingTotal'))
+      return
+    }
+    if (!currentShot.ballSpeed) {
+      alert(t('errors.missingBallSpeed'))
+      return
+    }
 
     const newShot: ShotData = {
       id: Date.now().toString(),
@@ -203,9 +270,10 @@ export default function NewAnalysisPage() {
       clubPath: currentShot.clubPath ? parseFloat(currentShot.clubPath) : undefined,
       faceAngle: currentShot.faceAngle ? parseFloat(currentShot.faceAngle) : undefined,
       spinRate: currentShot.spinRate ? parseInt(currentShot.spinRate) : undefined,
-      carry: parseFloat(currentShot.carry),
-      total: currentShot.total ? parseFloat(currentShot.total) : undefined,
+      carry: currentShot.carry ? parseFloat(currentShot.carry) : undefined,
+      total: parseFloat(currentShot.total),
       offline: currentShot.offline ? parseFloat(currentShot.offline) : undefined,
+      isEstimated: isBallSpeedEstimated,
     }
 
     setShots([...shots, newShot])
@@ -222,6 +290,7 @@ export default function NewAnalysisPage() {
       total: '',
       offline: '',
     })
+    setIsBallSpeedEstimated(false)
   }
 
   const removeShot = (id: string) => {
@@ -253,13 +322,22 @@ export default function NewAnalysisPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        if (result.code === 'LIMIT_REACHED') {
+        if (result.code === 'DAILY_LIMIT_REACHED') {
+          setDailyLimitReached(true)
+          setRemainingToday(0)
+          alert(t('errors.dailyLimitReached'))
+        } else if (result.code === 'LIMIT_REACHED') {
           alert(t('errors.limitReached'))
         } else {
           alert(result.error || t('errors.analysisFailed'))
         }
         setIsAnalyzing(false)
         return
+      }
+
+      // 성공 시 남은 횟수 업데이트
+      if (typeof result.remainingToday === 'number') {
+        setRemainingToday(result.remainingToday)
       }
 
       // 분석 완료 후 결과 페이지로 이동
@@ -765,16 +843,37 @@ export default function NewAnalysisPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.ballSpeed')} ({speedUnit === 'mph' ? 'mph' : 'm/s'})
+                    {t('shotData.ballSpeed')} ({speedUnit === 'mph' ? 'mph' : 'm/s'}) *
+                    {isBallSpeedEstimated && (
+                      <span className="ml-1 text-amber-600 font-medium">
+                        ({t('analysis.new.estimated')})
+                      </span>
+                    )}
                   </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={currentShot.ballSpeed}
-                    onChange={(e) => setCurrentShot({ ...currentShot, ballSpeed: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder={speedUnit === 'mph' ? '165' : '73.8'}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={currentShot.ballSpeed}
+                      onChange={(e) => {
+                        setCurrentShot({ ...currentShot, ballSpeed: e.target.value })
+                        setIsBallSpeedEstimated(false)
+                      }}
+                      className={`flex-1 px-3 py-2 border rounded-lg text-sm ${
+                        isBallSpeedEstimated ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                      }`}
+                      placeholder={speedUnit === 'mph' ? '165' : '73.8'}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleEstimateBallSpeed}
+                      disabled={!currentShot.total}
+                      className="px-3 py-2 text-xs font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      title={locale === 'ko' ? '토탈 거리 기반으로 추정' : 'Estimate from total distance'}
+                    >
+                      {t('analysis.new.estimateBallSpeed')}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
@@ -868,7 +967,7 @@ export default function NewAnalysisPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.carry')} ({distanceUnit === 'yards' ? 'yds' : 'm'}) *
+                    {t('shotData.carry')} ({distanceUnit === 'yards' ? 'yds' : 'm'})
                   </label>
                   <input
                     type="number"
@@ -877,12 +976,11 @@ export default function NewAnalysisPage() {
                     onChange={(e) => setCurrentShot({ ...currentShot, carry: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     placeholder={distanceUnit === 'yards' ? '245' : '224'}
-                    required
                   />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    {t('shotData.total')} ({distanceUnit === 'yards' ? 'yds' : 'm'})
+                    {t('shotData.total')} ({distanceUnit === 'yards' ? 'yds' : 'm'}) *
                   </label>
                   <input
                     type="number"
@@ -891,6 +989,7 @@ export default function NewAnalysisPage() {
                     onChange={(e) => setCurrentShot({ ...currentShot, total: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     placeholder={distanceUnit === 'yards' ? '265' : '242'}
+                    required
                   />
                 </div>
                 <div>
@@ -910,7 +1009,7 @@ export default function NewAnalysisPage() {
 
               <button
                 onClick={addShot}
-                disabled={!currentShot.carry}
+                disabled={!currentShot.total || !currentShot.ballSpeed}
                 className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 + {t('analysis.new.step4.addShot')}
@@ -934,11 +1033,14 @@ export default function NewAnalysisPage() {
                             {clubs.find((c) => c.value === shot.clubType)?.label}
                           </span>
                           <span className="text-sm text-gray-600">
-                            {shot.carry} {distanceUnit === 'yards' ? 'yds' : 'm'}
+                            {shot.total} {distanceUnit === 'yards' ? 'yds' : 'm'}
                           </span>
                           {shot.ballSpeed && (
-                            <span className="text-sm text-gray-400">
+                            <span className={`text-sm ${shot.isEstimated ? 'text-amber-600' : 'text-gray-400'}`}>
                               {shot.ballSpeed} {speedUnit === 'mph' ? 'mph' : 'm/s'}
+                              {shot.isEstimated && (
+                                <span className="ml-1 text-xs">({t('analysis.new.estimated')})</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -964,12 +1066,38 @@ export default function NewAnalysisPage() {
               </button>
 
               <div className="text-right">
-                <p className="text-sm text-gray-500 mb-2">
-                  {t('analysis.new.freeLeft', { count: freeAnalysesLeft })}
-                </p>
+                {/* 일일 제한 도달 시 안내 */}
+                {dailyLimitReached ? (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm font-medium text-amber-800">
+                      {t('analysis.new.dailyLimitReached')}
+                    </p>
+                    <p className="text-xs text-amber-600 mt-1">
+                      {t('analysis.new.comeBackTomorrow')}
+                    </p>
+                    <Link
+                      href={`/${locale}/pricing`}
+                      className="inline-block mt-2 text-xs text-green-600 hover:text-green-700 font-medium underline"
+                    >
+                      {t('subscription.upgrade')} →
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mb-2">
+                    {subscriptionLoading ? (
+                      <span className="text-gray-400">...</span>
+                    ) : isUnlimited ? (
+                      <span className="text-green-600 font-medium">
+                        {t('analysis.new.unlimitedAnalyses')}
+                      </span>
+                    ) : (
+                      t('analysis.new.freeLeftToday', { count: remainingToday })
+                    )}
+                  </p>
+                )}
                 <button
                   onClick={handleAnalyze}
-                  disabled={shots.length === 0 || isAnalyzing}
+                  disabled={shots.length === 0 || isAnalyzing || dailyLimitReached}
                   className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   {isAnalyzing ? (

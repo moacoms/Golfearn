@@ -267,7 +267,13 @@
       },
       "analyze": "분석하기",
       "analyzing": "스윙 분석 중...",
-      "freeLeft": "무료 분석 {count}회 남음"
+      "freeLeft": "무료 분석 {count}회 남음",
+      "freeLeftToday": "오늘 무료 분석 {count}회 남음",
+      "dailyLimitReached": "오늘의 무료 분석을 모두 사용했습니다",
+      "comeBackTomorrow": "내일 다시 오세요",
+      "estimated": "추정값",
+      "estimateBallSpeed": "추정하기",
+      "unlimitedAnalyses": "무제한 분석"
     },
     "result": {
       "title": "분석 결과",
@@ -433,8 +439,12 @@
     "notFound": "페이지를 찾을 수 없습니다",
     "unauthorized": "로그인이 필요합니다",
     "limitReached": "월간 사용 한도에 도달했습니다. 업그레이드해주세요.",
+    "dailyLimitReached": "오늘의 분석 한도에 도달했습니다",
     "ocrFailed": "이미지에서 데이터를 추출할 수 없습니다. 다시 시도하거나 직접 입력해주세요.",
-    "analysisFailed": "분석에 실패했습니다. 다시 시도해주세요."
+    "analysisFailed": "분석에 실패했습니다. 다시 시도해주세요.",
+    "missingClub": "클럽 종류를 선택해주세요",
+    "missingTotal": "토탈 거리를 입력해주세요",
+    "missingBallSpeed": "볼스피드를 입력하거나 추정하기를 클릭해주세요"
   },
   "footer": {
     "product": "제품",

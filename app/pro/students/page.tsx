@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 import StudentList from '@/components/pro/StudentList'
 
 export default async function StudentsPage() {
