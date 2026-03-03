@@ -34,18 +34,24 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      // 프로필 데이터 가져오기
-      const { data: profiles, error } = await (supabase as any)
+      // API를 통해 사용자 데이터 가져오기 (이메일 포함)
+      const response = await fetch('/api/admin/users')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+
+      const users = await response.json()
+      setUsers(users)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      // API 실패 시 프로필 데이터만이라도 가져오기
+      const { data: profiles } = await (supabase as any)
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
-
-      if (error) throw error
-
+      
       setUsers(profiles || [])
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      setUsers([])
     } finally {
       setLoading(false)
     }
@@ -227,7 +233,9 @@ export default function AdminUsersPage() {
                     {new Date(user.created_at).toLocaleDateString('ko-KR')}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    -
+                    {user.last_sign_in_at
+                      ? new Date(user.last_sign_in_at).toLocaleDateString('ko-KR')
+                      : '-'}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <button
@@ -281,6 +289,14 @@ export default function AdminUsersPage() {
                     <label className="block text-sm font-medium text-gray-700">가입일</label>
                     <div className="mt-1 text-sm text-gray-900">
                       {new Date(selectedUser.created_at).toLocaleString('ko-KR')}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">마지막 로그인</label>
+                    <div className="mt-1 text-sm text-gray-900">
+                      {selectedUser.last_sign_in_at 
+                        ? new Date(selectedUser.last_sign_in_at).toLocaleString('ko-KR')
+                        : '정보 없음'}
                     </div>
                   </div>
                 </div>
