@@ -38,13 +38,23 @@ export default function AdminUsersPage() {
       const response = await fetch('/api/admin/users')
       
       if (!response.ok) {
-        throw new Error('Failed to fetch users')
+        const errorData = await response.text()
+        console.error('API response error:', errorData)
+        throw new Error(`Failed to fetch users: ${response.status}`)
       }
 
       const users = await response.json()
+      console.log('Fetched users:', users.length, 'users')
+      
+      // 첫 번째 사용자의 이메일 확인 (디버깅)
+      if (users.length > 0) {
+        console.log('First user email:', users[0].email || 'No email')
+      }
+      
       setUsers(users)
     } catch (error) {
       console.error('Error fetching users:', error)
+      alert('사용자 목록을 불러오는데 실패했습니다. 콘솔을 확인해주세요.')
       // API 실패 시 프로필 데이터만이라도 가져오기
       const { data: profiles } = await (supabase as any)
         .from('profiles')
