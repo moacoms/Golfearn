@@ -30,22 +30,29 @@ export default function NewStudentPage() {
     average_score: ''
   })
 
-  // 회원 검색
+  // 회원 검색 (이름 또는 이메일)
   const searchUsers = async () => {
     if (!searchQuery.trim()) return
     
     setSearching(true)
     try {
-      // 이름으로 검색 (프로필 테이블에서)
-      const { data: profiles } = await (supabase as any)
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .or(`full_name.ilike.%${searchQuery}%`)
-        .limit(10)
-
-      setSearchResults(profiles || [])
+      // API를 통해 이름과 이메일로 검색
+      const response = await fetch(`/api/pro/search-members?q=${encodeURIComponent(searchQuery)}`)
+      
+      if (!response.ok) {
+        throw new Error('Search failed')
+      }
+      
+      const { users } = await response.json()
+      setSearchResults(users || [])
+      
+      // 검색 결과가 없으면 안내 메시지
+      if (!users || users.length === 0) {
+        console.log('검색 결과가 없습니다:', searchQuery)
+      }
     } catch (err) {
       console.error('Search error:', err)
+      setSearchResults([])
     } finally {
       setSearching(false)
     }
@@ -165,7 +172,7 @@ export default function NewStudentPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="이름 또는 이메일로 검색..."
+                  placeholder="이름 또는 이메일로 검색... (예: 다희아빠, hdopen)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), searchUsers())}
@@ -182,6 +189,17 @@ export default function NewStudentPage() {
               </div>
 
               {/* 검색 결과 */}
+              {searchQuery && !searching && searchResults.length === 0 && (
+                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="text-sm text-gray-600">
+                    "<span className="font-medium">{searchQuery}</span>"에 대한 검색 결과가 없습니다.
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    이름 또는 이메일 주소로 다시 검색해보세요.
+                  </div>
+                </div>
+              )}
+              
               {searchResults.length > 0 && (
                 <div className="mt-4 border rounded-lg divide-y">
                   {searchResults.map(user => (
