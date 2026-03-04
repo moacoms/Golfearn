@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
@@ -27,7 +27,7 @@ export async function GET() {
     const adminClient = createAdminClient()
     
     // 프로필 데이터 가져오기 (admin 클라이언트로 RLS 우회)
-    const { data: profiles, error: profilesError } = await adminClient
+    const { data: profiles, error: profilesError } = await (adminClient as any)
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
@@ -51,11 +51,12 @@ export async function GET() {
     console.log('Profiles count:', profiles?.length || 0)
 
     // 프로필과 auth 정보 병합
-    const mergedUsers = (profiles || []).map(profile => {
+    const mergedUsers = (profiles || []).map((profile: any) => {
       const authUser = authData?.users?.find(u => u.id === profile.id)
       
       // 디버깅: 첫 번째 사용자의 이메일 확인
-      if (profiles && profiles.indexOf(profile) === 0) {
+      const profilesArray = profiles as any[]
+      if (profilesArray && profilesArray.indexOf(profile) === 0) {
         console.log('First user auth data:', authUser?.email || 'No email found')
       }
       
